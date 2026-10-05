@@ -12,7 +12,7 @@ In `index.html`, cerca l'array `SITES` all'inizio dello `<script>` e cambia per 
 - `desc` – descrizione breve
 - `url` – indirizzo del gioco (lascialo vuoto `""` per mostrare "link in arrivo")
 - `tag` – categoria (Esplora, Codice, Arcade…)
-- `img` – immagine di copertina della card (formato consigliato 600×340)
+- `img` – immagine di copertina della card (formato 1200×680)
 - `sym` – simbolo decorativo sullo sfondo della card
 
 ## Effetti
@@ -26,10 +26,24 @@ In `index.html`, cerca l'array `SITES` all'inizio dello `<script>` e cambia per 
 
 ## Immagini
 
-Le copertine animate dei giochi sono in `img/` e sono generate da `tools/genera-immagini.py`:
+Le copertine sono in `img/` e sono tutte nello stesso stile (nebulosa, stelle, bagliore, grana e cornice HUD).
+Le genera `tools/genera-copertine.js`, che disegna le scene di `tools/copertine.html`:
 
 ```
-python3 tools/genera-immagini.py
+npm i -D playwright && npx playwright install chromium
+node tools/genera-copertine.js
 ```
 
-Per usare uno screenshot vero di un gioco, mettilo in `img/` (png, jpg o gif, meglio se 600×340 o più grande con le stesse proporzioni) e cambia il campo `img` di quel gioco in `index.html`.
+Aprendo `tools/copertine.html` nel browser vedi un'anteprima di tutte le scene.
+
+### Usare lo screenshot vero di un gioco
+
+Metti lo screenshot in `tools/screenshot/` con lo stesso nome della copertina, per esempio
+`tools/screenshot/viaggio-infinito.png`, e rilancia lo script: la copertina viene rifatta dallo
+screenshot, trasformata nello stesso stile delle altre (bicromia con il colore del gioco, effetto ologramma, cornice).
+
+Per far scattare lo screenshot direttamente allo script, dai giochi che hanno già un indirizzo:
+
+```
+node tools/genera-copertine.js --cattura
+```

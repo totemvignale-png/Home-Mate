@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Copertine mate&amp;dintorni</title>
+<style>body { margin: 0; background: #060918; color: #eef1ff; font: 14px system-ui; } canvas { display: block; max-width: 100%; margin: 0 auto 12px; }</style>
+</head>
+<body>
+<!--
+  Disegna le copertine dei giochi su canvas, tutte con lo stesso stile:
+  nebulosa + stelle + soggetto luminoso + vignettatura, grana e cornice HUD.
+  Viene usata da tools/genera-copertine.js; aperta nel browser mostra un'anteprima.
+-->
+<script>
+const W = 1200, H = 680;
+const INK = "#060918";
+const PAL = { viola: "#b48cff", ambra: "#ffb84d", menta: "#7ee0b5", cielo: "#6fb6ff", corallo: "#ff7a59", rosa: "#ff6fae", gesso: "#eef1ff" };
+
+/* ---------------- utilità ---------------- */
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+const TAU = Math.PI * 2;
+function canvas() { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; }
+function rgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+function glow(ctx, color, blur, fn) { ctx.save(); ctx.shadowColor = color; ctx.shadowBlur = blur; fn(); ctx.restore(); }
+function lemniscate(t, a, ky = 1) { const d = 1 + Math.sin(t) ** 2; return [a * Math.cos(t) / d, ky * a * Math.sin(t) * Math.cos(t) / d]; }
+
+/* ---------------- stile comune ---------------- */
+function sfondo(ctx, r, c1, c2, cx = .5, cy = .45) {
+  ctx.fillStyle = INK; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(W * cx, H * cy, 0, W * cx, H * cy, W * .8);
+  g.addColorStop(0, "#1a1f52"); g.addColorStop(.55, "#0b0f2a"); g.addColorStop(1, INK);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // nebulosa: tante nuvole sfocate sovrapposte
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.filter = "blur(38px)";
+  for (let i = 0; i < 26; i++) {
+    const x = r() * W, y = r() * H, rad = 80 + r() * 260, col = r() < .5 ? c1 : c2;
+    const gg = ctx.createRadialGradient(x, y, 0, x, y, rad);
+    gg.addColorStop(0, rgba(col, .10 + r() * .12)); gg.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(x, y, rad, 0, TAU); ctx.fill();
+  }
+  ctx.restore();
+  // filamenti di polvere scura
+  ctx.save(); ctx.filter = "blur(26px)"; ctx.globalAlpha = .5;
+  for (let i = 0; i < 8; i++) { ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(r() * W, r() * H, 120 + r() * 200, 20 + r() * 40, r() * TAU, 0, TAU); ctx.fill(); }
+  ctx.restore();
+}
+function stelle(ctx, r, n = 420) {
+  ctx.save();
+  for (let i = 0; i < n; i++) {
+    const x = r() * W, y = r() * H, big = r() < .04, s = big ? 1.6 + r() * 1.4 : .4 + r() * 1.1;
+    const tint = ["#ffffff", "#ffffff", "#dfe8ff", "#ffe9c7", "#eadcff"][(r() * 5) | 0];
+    ctx.globalAlpha = .35 + r() * .65; ctx.fillStyle = tint;
+    if (big) {
+      glow(ctx, tint, 14, () => { ctx.beginPath(); ctx.arc(x, y, s, 0, TAU); ctx.fill(); });
+      ctx.globalAlpha = .5; ctx.strokeStyle = tint; ctx.lineWidth = .8;
+      ctx.beginPath(); ctx.moveTo(x - s * 7, y); ctx.lineTo(x + s * 7, y); ctx.moveTo(x, y - s * 7); ctx.lineTo(x, y + s * 7); ctx.stroke();
+    } else { ctx.beginPath(); ctx.arc(x, y, s, 0, TAU); ctx.fill(); }
+  }
+  ctx.restore();
+}
+function finitura(ctx, accento, codice) {
+  // bagliore (bloom): ridisegna l'immagine sfocata in modalità schiarisci
+  const tmp = canvas(), t = tmp.getContext("2d"); t.drawImage(ctx.canvas, 0, 0);
+  ctx.save(); ctx.globalCompositeOperation = "screen"; ctx.globalAlpha = .45; ctx.filter = "blur(18px) brightness(1.1)"; ctx.drawImage(tmp, 0, 0); ctx.restore();
+  // gradazione colore comune
+  ctx.save(); ctx.globalCompositeOperation = "soft-light"; ctx.fillStyle = rgba("#3b2b8f", .45); ctx.fillRect(0, 0, W, H); ctx.restore();
+  // vignettatura
+  const v = ctx.createRadialGradient(W / 2, H / 2, H * .35, W / 2, H / 2, W * .72);
+  v.addColorStop(0, "rgba(6,9,24,0)"); v.addColorStop(1, "rgba(6,9,24,.85)");
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  // righe di scansione leggere
+  ctx.save(); ctx.globalAlpha = .06; ctx.fillStyle = "#000"; for (let y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1); ctx.restore();
+  // grana
+  const img = ctx.getImageData(0, 0, W, H), d = img.data, r = rng(99);
+  for (let i = 0; i < d.length; i += 4) { const n = (r() - .5) * 22; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  ctx.putImageData(img, 0, 0);
+  // cornice HUD
+  ctx.save(); ctx.strokeStyle = rgba(accento, .85); ctx.lineWidth = 3; const m = 28, L = 46;
+  for (const [x, y, sx, sy] of [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]]) {
+    ctx.beginPath(); ctx.moveTo(x, y + sy * L); ctx.lineTo(x, y); ctx.lineTo(x + sx * L, y); ctx.stroke();
+  }
+  ctx.font = "600 18px ui-monospace, Menlo, monospace"; ctx.fillStyle = rgba(accento, .9); ctx.textAlign = "left";
+  ctx.fillText(codice, m + 12, H - m - 12);
+  ctx.textAlign = "right"; ctx.fillStyle = rgba("#eef1ff", .6); ctx.fillText("mate&dintorni", W - m - 12, H - m - 12);
+  ctx.restore();
+}
+function nave(ctx, x, y, ang, s, accento) { // navicella stilizzata vista dall'alto
+  ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.scale(s, s);
+  const fl = ctx.createLinearGradient(-60, 0, -14, 0); fl.addColorStop(0, rgba(PAL.ambra, 0)); fl.addColorStop(1, "#fff3d6");
+  glow(ctx, PAL.ambra, 30, () => { ctx.fillStyle = fl; ctx.beginPath(); ctx.moveTo(-14, -6); ctx.lineTo(-62, 0); ctx.lineTo(-14, 6); ctx.fill(); });
+  glow(ctx, accento, 24, () => {
+    ctx.fillStyle = "#eef1ff"; ctx.strokeStyle = accento; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(30, 0); ctx.lineTo(-16, -18); ctx.lineTo(-8, 0); ctx.lineTo(-16, 18); ctx.closePath(); ctx.fill(); ctx.stroke();
+  });
+  ctx.fillStyle = accento; ctx.beginPath(); ctx.ellipse(6, 0, 7, 4, 0, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+function pianeta(ctx, x, y, R, c1, c2, anelli) {
+  if (anelli) { ctx.save(); ctx.translate(x, y); ctx.rotate(-.35); ctx.strokeStyle = rgba(c1, .5); ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(0, 0, R * 1.9, R * .38, 0, Math.PI, TAU); ctx.stroke(); ctx.restore(); }
+  const atm = ctx.createRadialGradient(x, y, R * .9, x, y, R * 1.5); atm.addColorStop(0, rgba(c1, .35)); atm.addColorStop(1, rgba(c1, 0));
+  ctx.fillStyle = atm; ctx.beginPath(); ctx.arc(x, y, R * 1.5, 0, TAU); ctx.fill();
+  const g = ctx.createRadialGradient(x - R * .4, y - R * .45, R * .1, x, y, R * 1.05);
+  g.addColorStop(0, "#fff1dc"); g.addColorStop(.35, c1); g.addColorStop(1, c2);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.clip(); ctx.globalAlpha = .22;
+  for (let k = -3; k <= 3; k++) { ctx.strokeStyle = k % 2 ? c2 : "#fff1dc"; ctx.lineWidth = R * .09; ctx.beginPath(); ctx.ellipse(x, y + k * R * .26, R * 1.2, R * .14, -.12, 0, TAU); ctx.stroke(); }
+  ctx.restore();
+  if (anelli) { ctx.save(); ctx.translate(x, y); ctx.rotate(-.35); ctx.strokeStyle = rgba(c1, .8); ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(0, 0, R * 1.9, R * .38, 0, 0, Math.PI); ctx.stroke(); ctx.restore(); }
+}
+
+/* ---------------- le scene ---------------- */
+const SCENE = {
+  "viaggio-infinito"(ctx) {
+    const r = rng(11); sfondo(ctx, r, PAL.viola, PAL.cielo); stelle(ctx, r);
+    pianeta(ctx, 1010, 150, 70, PAL.corallo, "#4a1630", true);
+    // tunnel di ∞ che si allontanano verso il centro
+    const cx = 600, cy = 330;
+    for (let i = 14; i >= 0; i--) {
+      const s = Math.pow(.8, i), a = 470 * s, gr = ctx.createLinearGradient(cx - a, 0, cx + a, 0);
+      gr.addColorStop(0, PAL.viola); gr.addColorStop(.5, PAL.cielo); gr.addColorStop(1, PAL.rosa);
+      ctx.save(); ctx.globalAlpha = .25 + .75 * s; ctx.strokeStyle = gr; ctx.lineWidth = Math.max(1, 10 * s);
+      glow(ctx, PAL.viola, 30 * s + 6, () => { ctx.beginPath(); for (let k = 0; k <= 240; k++) { const [x, y] = lemniscate(k / 240 * TAU, a, 1.15); k ? ctx.lineTo(cx + x, cy + y) : ctx.moveTo(cx + x, cy + y); } ctx.stroke(); });
+      ctx.restore();
+    }
+    const t = 2.2, [x1, y1] = lemniscate(t, 470, 1.15), [x2, y2] = lemniscate(t + .01, 470, 1.15);
+    nave(ctx, cx + x1, cy + y1, Math.atan2(y2 - y1, x2 - x1), 1.3, PAL.viola);
+    ctx.save(); ctx.font = "italic 34px Georgia, serif"; ctx.fillStyle = rgba(PAL.gesso, .75); ctx.textAlign = "center"; ctx.fillText("1, 2, 3, … ∞", cx, 610); ctx.restore();
+    finitura(ctx, PAL.viola, "M-01 · ESPLORA");
+  },
+  "toy-story"(ctx) {
+    const r = rng(22); sfondo(ctx, r, PAL.ambra, PAL.cielo, .7, .3); stelle(ctx, r, 360);
+    // stella bersaglio
+    const sx = 960, sy = 170;
+    glow(ctx, PAL.ambra, 70, () => {
+      const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 110); g.addColorStop(0, "#fff8d8"); g.addColorStop(1, PAL.ambra);
+      ctx.fillStyle = g; ctx.strokeStyle = "#c97a00"; ctx.lineWidth = 6; ctx.lineJoin = "round"; ctx.beginPath();
+      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? 46 : 108; ctx.lineTo(sx + rr * Math.cos(a), sy + rr * Math.sin(a)); }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    });
+    // scia tratteggiata
+    ctx.save(); ctx.strokeStyle = rgba(PAL.gesso, .8); ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.setLineDash([2, 22]);
+    ctx.beginPath(); ctx.moveTo(60, 700); ctx.bezierCurveTo(250, 640, 380, 520, 560, 400); ctx.stroke(); ctx.restore();
+    // razzo giocattolo
+    ctx.save(); ctx.translate(640, 350); ctx.rotate(.95); ctx.scale(2.2, 2.2);
+    const fl = ctx.createLinearGradient(0, 30, 0, 95); fl.addColorStop(0, "#fff6c9"); fl.addColorStop(.5, PAL.ambra); fl.addColorStop(1, rgba(PAL.corallo, 0));
+    glow(ctx, PAL.ambra, 40, () => { ctx.fillStyle = fl; ctx.beginPath(); ctx.moveTo(-12, 38); ctx.quadraticCurveTo(0, 110, 12, 38); ctx.fill(); });
+    const bd = ctx.createLinearGradient(-22, 0, 22, 0); bd.addColorStop(0, "#ffffff"); bd.addColorStop(1, "#aab6d8");
+    ctx.lineWidth = 3.5; ctx.strokeStyle = "#141a3c"; ctx.lineJoin = "round";
+    ctx.fillStyle = PAL.menta; ctx.beginPath(); ctx.moveTo(-20, 10); ctx.lineTo(-40, 40); ctx.lineTo(-20, 32); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(20, 10); ctx.lineTo(40, 40); ctx.lineTo(20, 32); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = bd; ctx.beginPath(); ctx.moveTo(0, -64); ctx.bezierCurveTo(24, -42, 26, -6, 21, 32); ctx.lineTo(-21, 32); ctx.bezierCurveTo(-26, -6, -24, -42, 0, -64); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = PAL.corallo; ctx.beginPath(); ctx.moveTo(0, -64); ctx.bezierCurveTo(13, -52, 17, -42, 18, -34); ctx.lineTo(-18, -34); ctx.bezierCurveTo(-17, -42, -13, -52, 0, -64); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = PAL.cielo; ctx.beginPath(); ctx.arc(0, -8, 10, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-3, -11, 3, 0, TAU); ctx.fill();
+    ctx.restore();
+    // cubetti giocattolo che fluttuano
+    const cubo = (x, y, s, rot, col, txt, tc) => { ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+      glow(ctx, col, 30, () => { ctx.fillStyle = col; ctx.strokeStyle = "#141a3c"; ctx.lineWidth = 5; ctx.beginPath(); ctx.roundRect(-s / 2, -s / 2, s, s, s * .14); ctx.fill(); ctx.stroke(); });
+      ctx.fillStyle = tc; ctx.font = `700 ${s * .62}px Georgia, serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, 0, s * .04); ctx.restore(); };
+    cubo(170, 190, 110, -.25, PAL.corallo, "∞", "#fff"); cubo(300, 110, 76, .3, PAL.ambra, "+1", "#141a3c"); cubo(1040, 520, 90, .18, PAL.cielo, "∞", "#141a3c");
+    ctx.save(); ctx.font = "italic 40px Georgia, serif"; ctx.fillStyle = rgba(PAL.gesso, .85); ctx.fillText("verso l'infinito e oltre", 90, 600); ctx.restore();
+    finitura(ctx, PAL.ambra, "M-02 · AVVENTURA");
+  },
+  "razzo-codice"(ctx) {
+    const r = rng(33); sfondo(ctx, r, PAL.menta, PAL.cielo, .3, .5); stelle(ctx, r, 300);
+    // pavimento a griglia in prospettiva
+    ctx.save(); ctx.strokeStyle = rgba(PAL.menta, .35); ctx.lineWidth = 1.5; const hz = 470;
+    for (let i = -20; i <= 20; i++) { ctx.beginPath(); ctx.moveTo(600 + i * 12, hz); ctx.lineTo(600 + i * 120, H); ctx.stroke(); }
+    for (let k = 0; k < 10; k++) { const y = hz + Math.pow(k / 9, 2) * (H - hz); ctx.globalAlpha = .2 + k / 12; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.restore();
+    // pannello olografico con il codice
+    ctx.save(); ctx.translate(80, 90);
+    glow(ctx, PAL.menta, 40, () => { ctx.fillStyle = "rgba(10,30,34,.78)"; ctx.strokeStyle = rgba(PAL.menta, .7); ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(0, 0, 560, 400, 18); ctx.fill(); ctx.stroke(); });
+    [PAL.corallo, PAL.ambra, PAL.menta].forEach((c, i) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(28 + i * 24, 26, 7, 0, TAU); ctx.fill(); });
+    ctx.font = "20px ui-monospace, Menlo, monospace"; ctx.fillStyle = rgba(PAL.gesso, .5); ctx.fillText("razzo.py", 240, 33);
+    const righe = [["razzo", " = Razzo()", PAL.menta], ["razzo.aggiungi", "(Motore(spinta=9000))", PAL.cielo], ["razzo.aggiungi", "(Serbatoio(litri=500))", PAL.cielo], ["razzo.aggiungi", "(Alette(n=3))", PAL.cielo], ["", "", ""], ["for", " t in range(10, 0, -1):", PAL.rosa], ["    print", "(t)", PAL.ambra], ["razzo.lancia", "()", PAL.menta]];
+    ctx.font = "22px ui-monospace, Menlo, monospace";
+    righe.forEach(([a, b, c], i) => { const y = 88 + i * 38; ctx.fillStyle = rgba(PAL.gesso, .3); ctx.fillText(String(i + 1).padStart(2), 22, y);
+      glow(ctx, c || PAL.menta, 10, () => { ctx.fillStyle = c; ctx.fillText(a, 70, y); }); ctx.fillStyle = PAL.gesso; ctx.fillText(b, 70 + ctx.measureText(a).width, y); });
+    ctx.fillStyle = PAL.menta; ctx.fillRect(70 + ctx.measureText("razzo.lancia()").width + 4, 88 + 7 * 38 - 20, 12, 26);
+    ctx.restore();
+    // razzo in wireframe sulla rampa
+    ctx.save(); ctx.translate(900, 300); ctx.scale(2.4, 2.4); ctx.lineJoin = "round";
+    const fl = ctx.createLinearGradient(0, 70, 0, 140); fl.addColorStop(0, "#fff6c9"); fl.addColorStop(.5, PAL.ambra); fl.addColorStop(1, rgba(PAL.corallo, 0));
+    glow(ctx, PAL.ambra, 40, () => { ctx.fillStyle = fl; ctx.beginPath(); ctx.moveTo(-14, 72); ctx.quadraticCurveTo(0, 150, 14, 72); ctx.fill(); });
+    glow(ctx, PAL.menta, 20, () => {
+      ctx.strokeStyle = PAL.menta; ctx.lineWidth = 2; ctx.fillStyle = "rgba(126,224,181,.08)";
+      ctx.beginPath(); ctx.moveTo(0, -90); ctx.bezierCurveTo(30, -60, 32, 0, 26, 70); ctx.lineTo(-26, 70); ctx.bezierCurveTo(-32, 0, -30, -60, 0, -90); ctx.closePath(); ctx.fill(); ctx.stroke();
+      for (const y of [-50, -10, 30]) { ctx.beginPath(); ctx.moveTo(-29, y); ctx.lineTo(29, y); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(0, -90); ctx.lineTo(0, 70); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, -28, 11, 0, TAU); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-26, 30); ctx.lineTo(-50, 74); ctx.lineTo(-26, 66); ctx.moveTo(26, 30); ctx.lineTo(50, 74); ctx.lineTo(26, 66); ctx.stroke();
+    });
+    ctx.fillStyle = rgba(PAL.menta, .9); ctx.font = "7px ui-monospace, Menlo, monospace"; ctx.fillText("h = 42 m", 36, -60); ctx.fillText("Ø 6 m", 36, -48);
+    ctx.restore();
+    finitura(ctx, PAL.menta, "M-03 · CODICE");
+  },
+  "asteroidi"(ctx) {
+    const r = rng(44); sfondo(ctx, r, PAL.cielo, PAL.viola, .5, .2); stelle(ctx, r, 380);
+    const roccia = (x, y, R, seed) => { const q = rng(seed);
+      ctx.save(); ctx.globalAlpha = .55; const tr = ctx.createLinearGradient(x, y, x + R * 2.2, y - R * 5.5); tr.addColorStop(0, rgba(PAL.cielo, .55)); tr.addColorStop(1, rgba(PAL.cielo, 0));
+      ctx.strokeStyle = tr; ctx.lineWidth = R * 1.4; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + R * 2.2, y - R * 5.5); ctx.stroke(); ctx.restore();
+      const g = ctx.createRadialGradient(x - R * .35, y - R * .4, R * .1, x, y, R * 1.1); g.addColorStop(0, "#c7cfee"); g.addColorStop(.55, "#5d6894"); g.addColorStop(1, "#1d2242");
+      ctx.fillStyle = g; ctx.beginPath(); for (let k = 0; k < 11; k++) { const a = k / 11 * TAU, rr = R * (.78 + q() * .3); ctx.lineTo(x + rr * Math.cos(a), y + rr * Math.sin(a)); } ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(20,24,52,.45)"; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(x + (q() - .5) * R, y + (q() - .5) * R, R * (.08 + q() * .14), 0, TAU); ctx.fill(); } };
+    [[150, 150, 60], [420, 300, 34], [760, 120, 80], [1040, 330, 50], [300, 520, 26], [960, 600, 30], [620, 470, 22], [1120, 120, 24]].forEach(([x, y, R], i) => roccia(x, y, R, 100 + i));
+    // laser
+    glow(ctx, PAL.menta, 30, () => { ctx.strokeStyle = PAL.menta; ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(600, 440); ctx.lineTo(600, 230); ctx.stroke(); });
+    glow(ctx, PAL.menta, 50, () => { ctx.fillStyle = "#e9fff6"; ctx.beginPath(); ctx.arc(600, 226, 10, 0, TAU); ctx.fill(); });
+    nave(ctx, 600, 540, -Math.PI / 2, 2.6, PAL.cielo);
+    ctx.save(); ctx.font = "600 26px ui-monospace, Menlo, monospace"; ctx.fillStyle = PAL.cielo; ctx.fillText("PUNTI 004 210", 70, 90);
+    ctx.textAlign = "right"; ctx.fillStyle = PAL.rosa; ctx.fillText("♥ ♥ ♥", W - 70, 90); ctx.restore();
+    finitura(ctx, PAL.cielo, "M-04 · ARCADE");
+  },
+  "orbita"(ctx) {
+    const r = rng(55); sfondo(ctx, r, PAL.corallo, PAL.viola, .4, .6); stelle(ctx, r, 380);
+    const px = 520, py = 380, R = 170, rx = 470, ry = 120, tilt = -.16;
+    const orbita = (from, to) => { ctx.save(); ctx.translate(px, py); ctx.rotate(tilt); ctx.strokeStyle = rgba(PAL.corallo, .75); ctx.lineWidth = 3; ctx.setLineDash([10, 12]);
+      glow(ctx, PAL.corallo, 14, () => { ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, from, to); ctx.stroke(); }); ctx.restore(); };
+    orbita(Math.PI, TAU);
+    pianeta(ctx, px, py, R, PAL.corallo, "#3a1028", false);
+    orbita(0, Math.PI);
+    // luna
+    const lg = ctx.createRadialGradient(1050, 120, 4, 1060, 130, 46); lg.addColorStop(0, "#f4f6ff"); lg.addColorStop(1, "#5d6490");
+    ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(1060, 130, 44, 0, TAU); ctx.fill();
+    // navicella in orbita con scia
+    const a = .55, ox = Math.cos(a) * rx, oy = Math.sin(a) * ry, x = px + ox * Math.cos(tilt) - oy * Math.sin(tilt), y = py + ox * Math.sin(tilt) + oy * Math.cos(tilt);
+    nave(ctx, x, y, Math.atan2(Math.cos(a) * ry, -Math.sin(a) * rx) + tilt, 1.6, PAL.corallo);
+    ctx.save(); ctx.font = "600 24px ui-monospace, Menlo, monospace"; ctx.fillStyle = "#ffc2ad"; ctx.textAlign = "right";
+    ctx.fillText("v = 7,9 km/s", W - 70, H - 120); ctx.fillStyle = rgba(PAL.gesso, .55); ctx.fillText("g = 9,81 m/s²", W - 70, H - 88); ctx.restore();
+    finitura(ctx, PAL.corallo, "M-05 · ARCADE");
+  },
+  "iperspazio"(ctx) {
+    const r = rng(66); sfondo(ctx, r, PAL.rosa, PAL.viola);
+    const cx = 600, cy = 300;
+    const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 260); core.addColorStop(0, "#ffffff"); core.addColorStop(.18, "#ffd0e6"); core.addColorStop(.5, rgba(PAL.rosa, .35)); core.addColorStop(1, rgba(PAL.rosa, 0));
+    ctx.fillStyle = core; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+    const cols = [PAL.rosa, PAL.viola, PAL.cielo, "#ffffff", "#ffffff"];
+    for (let i = 0; i < 380; i++) { const a = r() * TAU, r1 = 40 + r() * 260, r2 = r1 + 80 + r() * 520, c = cols[(r() * cols.length) | 0];
+      const g = ctx.createLinearGradient(cx + r1 * Math.cos(a), cy + r1 * Math.sin(a), cx + r2 * Math.cos(a), cy + r2 * Math.sin(a)); g.addColorStop(0, rgba(c, 0)); g.addColorStop(1, rgba(c, .9));
+      ctx.strokeStyle = g; ctx.lineWidth = .8 + r() * 3; ctx.beginPath(); ctx.moveTo(cx + r1 * Math.cos(a), cy + r1 * Math.sin(a)); ctx.lineTo(cx + r2 * Math.cos(a), cy + r2 * Math.sin(a) * .8); ctx.stroke(); }
+    ctx.restore();
+    // astronave vista da dietro
+    ctx.save(); ctx.translate(600, 500); ctx.scale(2.6, 2.6); ctx.lineJoin = "round";
+    glow(ctx, PAL.viola, 30, () => { ctx.fillStyle = "#1a1230"; ctx.strokeStyle = PAL.viola; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(-95, 12); ctx.lineTo(-22, -16); ctx.lineTo(22, -16); ctx.lineTo(95, 12); ctx.lineTo(42, 22); ctx.lineTo(-42, 22); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-22, -16); ctx.lineTo(-11, -36); ctx.lineTo(11, -36); ctx.lineTo(22, -16); ctx.closePath(); ctx.fill(); ctx.stroke(); });
+    ctx.fillStyle = PAL.cielo; ctx.beginPath(); ctx.moveTo(-9, -32); ctx.lineTo(9, -32); ctx.lineTo(13, -20); ctx.lineTo(-13, -20); ctx.closePath(); ctx.fill();
+    for (const ex of [-32, 32]) glow(ctx, PAL.cielo, 40, () => { const eg = ctx.createRadialGradient(ex, 10, 0, ex, 10, 15); eg.addColorStop(0, "#fff"); eg.addColorStop(.5, PAL.cielo); eg.addColorStop(1, rgba(PAL.cielo, 0)); ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(ex, 10, 15, 0, TAU); ctx.fill(); });
+    ctx.restore();
+    ctx.save(); ctx.font = "600 26px ui-monospace, Menlo, monospace"; ctx.fillStyle = PAL.rosa; ctx.textAlign = "right"; ctx.fillText("VELOCITÀ ×∞", W - 70, 90); ctx.restore();
+    finitura(ctx, PAL.rosa, "M-06 · ARCADE");
+  },
+};
+
+/* uno screenshot vero trasformato nello stesso stile: bicromia notte→accento, aberrazione cromatica, finitura comune */
+async function stilizza(ctx, dataUrl, accento, codice) {
+  const img = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = dataUrl; });
+  const s = Math.max(W / img.width, H / img.height), w = img.width * s, h = img.height * s;
+  const base = canvas(), b = base.getContext("2d"); b.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+  // bicromia: luminanza → gradiente inchiostro / accento / bianco
+  const d = b.getImageData(0, 0, W, H), p = d.data, n = parseInt(accento.slice(1), 16), A = [n >> 16, (n >> 8) & 255, n & 255], K = [6, 9, 24];
+  for (let i = 0; i < p.length; i += 4) {
+    const l = (.299 * p[i] + .587 * p[i + 1] + .114 * p[i + 2]) / 255;
+    const [c0, c1, t] = l < .6 ? [K, A, l / .6] : [A, [255, 255, 255], (l - .6) / .4];
+    for (let k = 0; k < 3; k++) p[i + k] = c0[k] + (c1[k] - c0[k]) * t;
+  }
+  b.putImageData(d, 0, 0);
+  ctx.fillStyle = INK; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.filter = "blur(1px)"; ctx.drawImage(base, 0, 0); ctx.restore();
+  // aberrazione cromatica ai bordi
+  ctx.save(); ctx.globalCompositeOperation = "screen"; ctx.globalAlpha = .25;
+  ctx.filter = "hue-rotate(160deg)"; ctx.drawImage(base, -6, 0); ctx.filter = "hue-rotate(-90deg)"; ctx.drawImage(base, 6, 0); ctx.restore();
+  stelle(ctx, rng(7), 160);
+  finitura(ctx, accento, codice);
+}
+
+async function genera(nome, screenshot) {
+  const c = canvas(), ctx = c.getContext("2d");
+  if (screenshot) await stilizza(ctx, screenshot.dataUrl, screenshot.accento, screenshot.codice);
+  else SCENE[nome](ctx);
+  return c;
+}
+
+/* anteprima quando la pagina viene aperta nel browser */
+window.addEventListener("load", async () => {
+  if (window.__headless) return;
+  for (const nome of Object.keys(SCENE)) document.body.appendChild(await genera(nome));
+});
+</script>
+</body>
+</html>

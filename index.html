@@ -192,14 +192,16 @@ h1 .amp {
   border: 1px solid rgba(143,152,194,.25); border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px;
 }
 .cover {
-  position: relative; margin: -22px -22px 0; aspect-ratio: 600 / 340; max-width: none; overflow: hidden;
+  position: relative; margin: -22px -22px 0; aspect-ratio: 1200 / 680; max-width: none; overflow: hidden;
   border-bottom: 1px solid var(--line); background: var(--ink-2);
 }
 .cover img {
   display: block; width: 100%; height: 100%; object-fit: cover;
-  transform: scale(1.02); transition: transform .8s cubic-bezier(.2,.8,.2,1), filter .5s;
-  filter: saturate(.92) brightness(.92);
+  transform: scale(1.04); transition: transform .8s cubic-bezier(.2,.8,.2,1), filter .5s;
+  filter: saturate(.95) brightness(.95);
+  animation: camera 14s ease-in-out infinite alternate; animation-delay: calc(var(--n) * -2.3s);
 }
+@keyframes camera { from { object-position: 40% 45%; } to { object-position: 60% 55%; } }
 .card:hover .cover img, .card:focus-visible .cover img { transform: scale(1.09) translateY(-2%); filter: saturate(1.1) brightness(1.05); }
 .cover::after { /* sfumatura verso il testo */
   content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -306,15 +308,15 @@ footer kbd { font-family: inherit; border: 1px solid rgba(143,152,194,.25); bord
 /* ============================================================
    LE 6 MISSIONI — modifica qui nomi, descrizioni e indirizzi.
    url vuoto ("") = card segnata "link in arrivo".
-   img: immagine di copertina (svg, png, jpg o gif, formato 600×340)
+   img: immagine di copertina (formato 1200×680, generata da tools/genera-copertine.js)
    ============================================================ */
 const SITES = [
-  { name: "Viaggio nell'infinito", tag: "Esplora",  desc: "Un'avventura tra numeri che non finiscono mai. Fin dove riesci ad arrivare?", url: "https://infinito-mate.netlify.app", color: "var(--c1)", img: "img/viaggio-infinito.svg" },
-  { name: "Toy Story",             tag: "Avventura", desc: "Verso l'infinito e oltre: la sfida ispirata al film.",                    url: "", color: "var(--c2)", img: "img/toy-story.svg" },
-  { name: "Razzo in codice",       tag: "Codice",    desc: "Costruisci il tuo razzo riga dopo riga, poi lancialo.",                   url: "", color: "var(--c3)", img: "img/razzo-codice.svg" },
-  { name: "Pioggia di asteroidi",  tag: "Arcade",    desc: "Pilota la navicella e schiva tutto quello che arriva.",                   url: "", color: "var(--c4)", img: "img/asteroidi.svg" },
-  { name: "Orbita perfetta",       tag: "Arcade",    desc: "Calcola la spinta giusta e resta in orbita il più a lungo possibile.",   url: "", color: "var(--c5)", img: "img/orbita.svg" },
-  { name: "Salto nell'iperspazio", tag: "Arcade",    desc: "Più vai veloce, più punti fai. Quanto resisti?",                         url: "", color: "var(--c6)", img: "img/iperspazio.svg" },
+  { name: "Viaggio nell'infinito", tag: "Esplora",  desc: "Un'avventura tra numeri che non finiscono mai. Fin dove riesci ad arrivare?", url: "https://infinito-mate.netlify.app", color: "var(--c1)", img: "img/viaggio-infinito.jpg" },
+  { name: "Toy Story",             tag: "Avventura", desc: "Verso l'infinito e oltre: la sfida ispirata al film.",                    url: "", color: "var(--c2)", img: "img/toy-story.jpg" },
+  { name: "Razzo in codice",       tag: "Codice",    desc: "Costruisci il tuo razzo riga dopo riga, poi lancialo.",                   url: "", color: "var(--c3)", img: "img/razzo-codice.jpg" },
+  { name: "Pioggia di asteroidi",  tag: "Arcade",    desc: "Pilota la navicella e schiva tutto quello che arriva.",                   url: "", color: "var(--c4)", img: "img/asteroidi.jpg" },
+  { name: "Orbita perfetta",       tag: "Arcade",    desc: "Calcola la spinta giusta e resta in orbita il più a lungo possibile.",   url: "", color: "var(--c5)", img: "img/orbita.jpg" },
+  { name: "Salto nell'iperspazio", tag: "Arcade",    desc: "Più vai veloce, più punti fai. Quanto resisti?",                         url: "", color: "var(--c6)", img: "img/iperspazio.jpg" },
 ];
 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -355,7 +357,7 @@ SITES.forEach((s, n) => {
   if (has) { try { host = new URL(s.url).host.replace(/^www\./, ""); } catch { host = s.url; } }
   a.innerHTML = `
     <div class="cover">
-      <img src="${s.img}" alt="" width="600" height="340" loading="${n < 3 ? "eager" : "lazy"}" decoding="async">
+      <img src="${s.img}" alt="" width="1200" height="680" loading="${n < 3 ? "eager" : "lazy"}" decoding="async">
       <span class="shine"></span>
       <div class="top"><span class="tag">${s.tag}</span><span class="key" aria-hidden="true">${n + 1}</span></div>
     </div>
