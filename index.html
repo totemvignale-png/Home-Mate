@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>mate&amp;dintorni</title>
+<meta name="description" content="mate&amp;dintorni — tutti i nostri siti in un posto solo.">
+<meta name="theme-color" content="#0b1022">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b1022'/%3E%3Ctext x='32' y='46' font-size='40' text-anchor='middle' font-family='Georgia,serif' font-style='italic' fill='%23ffb84d'%3E%26%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: lavagna notturna su carta millimetrata; titolo gigante, griglia 3×2 di "teoremi" cliccabili, curve parametriche che si disegnano sullo sfondo. */
+:root {
+  --ink: #0b1022;          /* fondo: blu lavagna */
+  --ink-2: #121a36;        /* superfici */
+  --chalk: #eef1ff;        /* testo principale */
+  --chalk-dim: #8f98c2;    /* testo secondario */
+  --grid: rgba(143, 152, 194, .07);
+  --amber: #ffb84d;        /* accento: la & */
+  --c1: #ff7a59; --c2: #ffb84d; --c3: #7ee0b5;
+  --c4: #6fb6ff; --c5: #b48cff; --c6: #ff6fae;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --radius: 22px;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--ink);
+  color: var(--chalk);
+  font-family: var(--display);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+body::before { /* carta millimetrata */
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    linear-gradient(rgba(143,152,194,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(143,152,194,.035) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 85%);
+}
+body::after { /* grana */
+  content: ""; position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+#curves { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.glow {
+  position: fixed; z-index: 0; pointer-events: none; width: 46vmax; height: 46vmax; border-radius: 50%;
+  filter: blur(80px); opacity: .35; mix-blend-mode: screen;
+  animation: drift 22s ease-in-out infinite alternate;
+}
+.glow.a { background: radial-gradient(circle, var(--c5), transparent 65%); top: -18vmax; left: -12vmax; }
+.glow.b { background: radial-gradient(circle, var(--c1), transparent 65%); bottom: -22vmax; right: -14vmax; animation-delay: -8s; }
+.glow.c { background: radial-gradient(circle, var(--c4), transparent 65%); top: 30%; left: 55%; width: 30vmax; height: 30vmax; opacity: .22; animation-delay: -14s; }
+@keyframes drift { to { transform: translate(6vmax, 4vmax) scale(1.15); } }
+
+#cursor {
+  position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none;
+  width: 340px; height: 340px; margin: -170px 0 0 -170px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,184,77,.13), transparent 60%);
+  transition: opacity .3s; opacity: 0;
+}
+
+.wrap {
+  position: relative; z-index: 2;
+  max-width: 1180px; margin: 0 auto;
+  padding-inline: max(16px, 4vw);
+  padding-block: clamp(28px, 6vh, 64px) 40px;
+  display: flex; flex-direction: column; gap: clamp(32px, 6vh, 64px);
+}
+
+/* ---------- HERO ---------- */
+header { display: grid; gap: 18px; }
+.eyebrow {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--chalk-dim); display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c3); box-shadow: 0 0 12px var(--c3); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; transform: scale(.7); } }
+
+h1 {
+  margin: 0; font-weight: 800; line-height: .86; letter-spacing: -.055em;
+  font-size: clamp(56px, 13.5vw, 196px);
+  font-variation-settings: "opsz" 96;
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  text-wrap: balance;
+}
+h1 .word { display: inline-flex; }
+h1 .ch {
+  display: inline-block;
+  background: linear-gradient(180deg, var(--chalk) 30%, #a9b2e0 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: rise .9s cubic-bezier(.2,.9,.25,1.25) both;
+  animation-delay: calc(var(--i) * 45ms + 150ms);
+  transition: transform .35s cubic-bezier(.3,1.6,.5,1), color .2s;
+}
+h1 .ch:hover { transform: translateY(-.08em) rotate(-4deg); }
+@keyframes rise { from { transform: translateY(.5em) rotate(6deg); opacity: .0; filter: blur(8px); } }
+h1 .amp {
+  font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: 0;
+  font-size: 1.12em; margin: 0 .04em 0 .02em; line-height: .7;
+  background: conic-gradient(from var(--ang, 0deg), var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c6), var(--c1));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: rise 1s cubic-bezier(.2,.9,.25,1.25) both .5s, spin 6s linear infinite;
+  filter: drop-shadow(0 0 28px rgba(255,184,77,.35));
+  display: inline-block; cursor: default;
+}
+@property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes spin { to { --ang: 360deg; } }
+h1 .amp:hover { animation: rise 1s both .5s, spin 1.2s linear infinite; transform: scale(1.1) rotate(-8deg); transition: transform .4s cubic-bezier(.3,1.6,.5,1); }
+
+.sub {
+  display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: end; justify-content: space-between;
+}
+.sub p {
+  margin: 0; max-width: 46ch; font-size: clamp(16px, 1.6vw, 20px); line-height: 1.5; color: var(--chalk-dim);
+  animation: fade 1s ease both 1s;
+}
+.sub p em { font-family: var(--serif); font-size: 1.2em; color: var(--chalk); }
+.formula {
+  font-family: var(--mono); font-size: 13px; color: var(--chalk-dim);
+  border: 1px solid rgba(143,152,194,.2); border-radius: 999px; padding: 8px 14px;
+  background: rgba(18,26,54,.5); backdrop-filter: blur(8px);
+  animation: fade 1s ease both 1.2s; white-space: nowrap;
+}
+.formula b { color: var(--amber); font-weight: 600; }
+@keyframes fade { from { opacity: 0; transform: translateY(10px); } }
+
+/* ---------- GRIGLIA ---------- */
+.grid {
+  display: grid; gap: clamp(14px, 1.8vw, 22px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  perspective: 1400px;
+}
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.card {
+  --c: var(--c1); --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%;
+  position: relative; isolation: isolate; display: flex; flex-direction: column; gap: 14px;
+  min-height: 250px; padding: 22px; border-radius: var(--radius);
+  color: var(--chalk); text-decoration: none; overflow: hidden;
+  background: linear-gradient(160deg, rgba(30,40,80,.75), rgba(13,19,42,.85));
+  border: 1px solid rgba(143,152,194,.16);
+  box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 20px 50px -25px rgba(0,0,0,.8);
+  transform: rotateX(var(--rx)) rotateY(var(--ry)) translateZ(0);
+  transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.2,.8,.2,1), border-color .3s, box-shadow .4s;
+  animation: cardIn .9s cubic-bezier(.2,.9,.25,1.1) both;
+  animation-delay: calc(var(--n) * 90ms + 700ms);
+  backdrop-filter: blur(6px);
+  outline: none;
+}
+@keyframes cardIn { from { opacity: 0; transform: translateY(40px) rotateX(18deg) scale(.96); } }
+.card::before { /* spotlight */
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity .35s;
+  background: radial-gradient(420px circle at var(--mx) var(--my), color-mix(in srgb, var(--c) 30%, transparent), transparent 55%);
+}
+.card::after { /* bordo luminoso */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: 1; pointer-events: none;
+  background: radial-gradient(260px circle at var(--mx) var(--my), var(--c), transparent 60%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity .35s;
+}
+.card:hover, .card:focus-visible {
+  border-color: color-mix(in srgb, var(--c) 45%, transparent);
+  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 30px 70px -30px color-mix(in srgb, var(--c) 70%, transparent);
+}
+.card:hover::before, .card:hover::after, .card:focus-visible::before, .card:focus-visible::after { opacity: 1; }
+.card:focus-visible { box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px var(--c); }
+
+.card .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; transform: translateZ(30px); }
+.tag {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+  color: var(--c); display: inline-flex; align-items: center; gap: 8px;
+}
+.tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+.key {
+  font-family: var(--mono); font-size: 11px; color: var(--chalk-dim);
+  border: 1px solid rgba(143,152,194,.25); border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px;
+}
+.plot { flex: 1; min-height: 90px; position: relative; transform: translateZ(50px); }
+.plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.plot .axis { stroke: rgba(143,152,194,.25); stroke-width: 1; fill: none; }
+.plot .curve {
+  fill: none; stroke: var(--c); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: var(--len); stroke-dashoffset: 0;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c) 70%, transparent));
+  animation: draw 2.4s cubic-bezier(.6,.1,.2,1) both; animation-delay: calc(var(--n) * 90ms + 1000ms);
+}
+.card:hover .curve { animation: draw 1.4s cubic-bezier(.6,.1,.2,1) both; }
+@keyframes draw { from { stroke-dashoffset: var(--len); } }
+.plot .sym {
+  position: absolute; right: -6px; bottom: -18px; font-family: var(--serif); font-style: italic;
+  font-size: 120px; line-height: 1; color: var(--c); opacity: .09; pointer-events: none;
+  transition: transform .6s cubic-bezier(.3,1.5,.5,1), opacity .4s;
+}
+.card:hover .sym { transform: translate(-10px, -8px) rotate(-10deg) scale(1.12); opacity: .2; }
+
+.card h2 {
+  margin: 0; font-size: clamp(24px, 2.4vw, 32px); font-weight: 700; letter-spacing: -.03em; line-height: 1;
+  transform: translateZ(40px); text-wrap: balance;
+}
+.card .desc { margin: 0; color: var(--chalk-dim); font-size: 14.5px; line-height: 1.45; transform: translateZ(25px); }
+.card .go {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px; transform: translateZ(35px);
+  font-family: var(--mono); font-size: 12px; color: var(--chalk-dim); padding-top: 12px;
+  border-top: 1px dashed rgba(143,152,194,.2);
+}
+.card .go span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.arrow {
+  flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(143,152,194,.1); color: var(--chalk);
+  transition: background .3s, transform .5s cubic-bezier(.3,1.6,.5,1), color .3s;
+}
+.card:hover .arrow, .card:focus-visible .arrow { background: var(--c); color: var(--ink); transform: rotate(-45deg) scale(1.1); }
+.ripple {
+  position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
+  background: radial-gradient(circle, var(--c), transparent 70%);
+  transform: scale(0); animation: ripple .8s ease-out forwards;
+}
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+/* ---------- NASTRO DI FORMULE ---------- */
+.ticker {
+  position: relative; overflow: hidden; border-block: 1px solid rgba(143,152,194,.14);
+  padding-block: 14px; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.ticker .track { display: flex; gap: 48px; width: max-content; animation: marquee 45s linear infinite; }
+.ticker:hover .track { animation-play-state: paused; }
+.ticker span { font-family: var(--serif); font-style: italic; font-size: 22px; color: var(--chalk-dim); white-space: nowrap; }
+.ticker span b { font-style: normal; font-family: var(--mono); font-size: 13px; color: var(--amber); font-weight: 400; margin-right: 10px; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+footer {
+  display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between;
+  font-family: var(--mono); font-size: 12px; color: var(--chalk-dim);
+}
+footer kbd { font-family: inherit; border: 1px solid rgba(143,152,194,.25); border-radius: 5px; padding: 1px 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  #curves { display: none; }
+}
+</style>
+</head>
+<body>
+<canvas id="curves" aria-hidden="true"></canvas>
+<div class="glow a" aria-hidden="true"></div>
+<div class="glow b" aria-hidden="true"></div>
+<div class="glow c" aria-hidden="true"></div>
+<div id="cursor" aria-hidden="true"></div>
+
+<main class="wrap">
+  <header>
+    <div class="eyebrow"><span class="dot"></span> 6 siti &middot; 1 indirizzo &middot; ∞ dintorni</div>
+    <h1 id="title" aria-label="mate&amp;dintorni"></h1>
+    <div class="sub">
+      <p>Tutto quello che ruota intorno alla <em>mate</em>, raccolto in un punto solo. Scegli una porta ed entra.</p>
+      <div class="formula" id="formula">e<sup>iπ</sup> + 1 = <b>0</b></div>
+    </div>
+  </header>
+
+  <nav class="grid" id="grid" aria-label="I siti di mate&amp;dintorni"></nav>
+
+  <div class="ticker" aria-hidden="true"><div class="track" id="ticker"></div></div>
+
+  <footer>
+    <span>© <span id="year"></span> mate&amp;dintorni</span>
+    <span>Premi <kbd>1</kbd>–<kbd>6</kbd> per aprire un sito</span>
+  </footer>
+</main>
+
+<script>
+/* ============================================================
+   I 6 SITI — modifica qui nomi, descrizioni e indirizzi.
+   curve: sine | rose | parabola | spiral | gauss | lissajous
+   ============================================================ */
+const SITES = [
+  { name: "Algebra",      tag: "x² + y²",  desc: "Equazioni, polinomi e tutto ciò che si risolve con una x.", url: "https://example.com/algebra",     color: "var(--c1)", curve: "parabola",  sym: "x" },
+  { name: "Geometria",    tag: "π · r²",   desc: "Figure, angoli e dimostrazioni da disegnare col compasso.",  url: "https://example.com/geometria",   color: "var(--c2)", curve: "rose",      sym: "π" },
+  { name: "Analisi",      tag: "∫ f(x) dx",desc: "Limiti, derivate e integrali, passo dopo passo.",             url: "https://example.com/analisi",     color: "var(--c3)", curve: "sine",      sym: "∫" },
+  { name: "Probabilità",  tag: "P(A|B)",   desc: "Dadi, monete e distribuzioni: il caso fatto bene.",           url: "https://example.com/probabilita", color: "var(--c4)", curve: "gauss",     sym: "σ" },
+  { name: "Logica",       tag: "p ⇒ q",    desc: "Insiemi, quantificatori e rompicapi per allenare la testa.", url: "https://example.com/logica",      color: "var(--c5)", curve: "lissajous", sym: "∀" },
+  { name: "Giochi",       tag: "φ = 1.618",desc: "Sfide, quiz e curiosità matematiche da condividere.",          url: "https://example.com/giochi",      color: "var(--c6)", curve: "spiral",    sym: "φ" },
+];
+
+/* ---------- titolo lettera per lettera ---------- */
+(() => {
+  const h1 = document.getElementById("title");
+  let i = 0;
+  const word = (txt) => {
+    const w = document.createElement("span"); w.className = "word"; w.setAttribute("aria-hidden", "true");
+    for (const c of txt) { const s = document.createElement("span"); s.className = "ch"; s.textContent = c; s.style.setProperty("--i", i++); w.appendChild(s); }
+    return w;
+  };
+  h1.append(word("mate"));
+  const amp = document.createElement("span"); amp.className = "amp"; amp.textContent = "&"; amp.setAttribute("aria-hidden", "true");
+  h1.append(amp, word("dintorni"));
+})();
+
+/* ---------- curve delle card ---------- */
+const CURVES = {
+  sine:      t => [t, .5 - .38 * Math.sin(t * Math.PI * 4) * (1 - t * .4)],
+  parabola:  t => { const x = t * 2 - 1; return [t, .1 + .8 * x * x]; },
+  gauss:     t => { const x = (t - .5) * 6; return [t, .9 - .8 * Math.exp(-x * x / 2)]; },
+  rose:      t => { const a = t * Math.PI * 2, r = .42 * Math.cos(3 * a); return [.5 + r * Math.cos(a) * .55, .5 + r * Math.sin(a)]; },
+  lissajous: t => { const a = t * Math.PI * 2; return [.5 + .28 * Math.sin(3 * a + Math.PI / 2), .5 + .42 * Math.sin(2 * a)]; },
+  spiral:    t => { const a = t * Math.PI * 5, r = .03 * Math.exp(.17 * a); return [.5 + r * Math.cos(a) * .6, .5 + r * Math.sin(a)]; },
+};
+function pathFor(kind, w = 300, h = 110, n = 220) {
+  const f = CURVES[kind]; let d = "";
+  for (let k = 0; k <= n; k++) { const [x, y] = f(k / n); d += (k ? "L" : "M") + (x * w).toFixed(1) + " " + (y * h).toFixed(1); }
+  return d;
+}
+
+const grid = document.getElementById("grid");
+SITES.forEach((s, n) => {
+  const a = document.createElement("a");
+  a.className = "card"; a.href = s.url; a.target = "_blank"; a.rel = "noopener";
+  a.style.setProperty("--c", s.color); a.style.setProperty("--n", n);
+  let host = s.url; try { host = new URL(s.url).host.replace(/^www\./, ""); } catch {}
+  a.innerHTML = `
+    <div class="top"><span class="tag">${s.tag}</span><span class="key" aria-hidden="true">${n + 1}</span></div>
+    <div class="plot" aria-hidden="true">
+      <svg viewBox="0 0 300 110" preserveAspectRatio="none">
+        <path class="axis" d="M0 55H300M150 0V110"/>
+        <path class="curve" d="${pathFor(s.curve)}" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <span class="sym">${s.sym}</span>
+    </div>
+    <h2>${s.name}</h2>
+    <p class="desc">${s.desc}</p>
+    <div class="go"><span>${host}</span>
+      <span class="arrow" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+    </div>`;
+  grid.appendChild(a);
+  const p = a.querySelector(".curve"); p.style.setProperty("--len", Math.ceil(p.getTotalLength() * 1.2));
+});
+
+/* ---------- tilt 3D, spotlight, ripple ---------- */
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const fine = matchMedia("(pointer: fine)").matches;
+document.querySelectorAll(".card").forEach(card => {
+  card.addEventListener("pointermove", e => {
+    const r = card.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    card.style.setProperty("--mx", x * 100 + "%"); card.style.setProperty("--my", y * 100 + "%");
+    if (!reduce && fine) { card.style.setProperty("--ry", (x - .5) * 14 + "deg"); card.style.setProperty("--rx", (.5 - y) * 14 + "deg"); }
+  });
+  card.addEventListener("pointerleave", () => { card.style.setProperty("--rx", "0deg"); card.style.setProperty("--ry", "0deg"); });
+  card.addEventListener("pointerdown", e => {
+    const r = card.getBoundingClientRect(), size = Math.max(r.width, r.height) * .6, rip = document.createElement("span");
+    rip.className = "ripple"; rip.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - r.left - size / 2}px;top:${e.clientY - r.top - size / 2}px`;
+    card.appendChild(rip); setTimeout(() => rip.remove(), 900);
+  });
+});
+
+/* ---------- scorciatoie 1–6 ---------- */
+addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= SITES.length) { const c = grid.children[n - 1]; c.focus(); c.click(); }
+});
+
+/* ---------- alone del cursore ---------- */
+const cur = document.getElementById("cursor");
+if (fine && !reduce) {
+  let tx = innerWidth / 2, ty = innerHeight / 2, cx = tx, cy = ty;
+  addEventListener("pointermove", e => { tx = e.clientX; ty = e.clientY; cur.style.opacity = 1; });
+  (function loop() { cx += (tx - cx) * .12; cy += (ty - cy) * .12; cur.style.transform = `translate(${cx}px,${cy}px)`; requestAnimationFrame(loop); })();
+}
+
+/* ---------- formula che cambia ---------- */
+const FORMULAS = ["e<sup>iπ</sup> + 1 = <b>0</b>", "a² + b² = <b>c²</b>", "Σ 1/n² = <b>π²/6</b>", "φ = (1+√5)/2 ≈ <b>1.618</b>", "V − E + F = <b>2</b>", "d/dx eˣ = <b>eˣ</b>"];
+const fEl = document.getElementById("formula"); let fi = 0;
+setInterval(() => {
+  fEl.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-6px)" }], { duration: 250, fill: "forwards" }).onfinish = () => {
+    fi = (fi + 1) % FORMULAS.length; fEl.innerHTML = FORMULAS[fi];
+    fEl.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 350, fill: "forwards" });
+  };
+}, 3200);
+
+/* ---------- nastro ---------- */
+const TICK = [["Euler", "e<sup>iπ</sup> + 1 = 0"], ["Pitagora", "a² + b² = c²"], ["Basilea", "Σ 1/n² = π²/6"], ["Gauss", "∫ e<sup>−x²</sup> dx = √π"], ["Eulero", "V − E + F = 2"], ["Aurea", "φ² = φ + 1"], ["Fermat", "xⁿ + yⁿ ≠ zⁿ"], ["Binomio", "(a+b)² = a² + 2ab + b²"]];
+const track = document.getElementById("ticker");
+track.innerHTML = [...TICK, ...TICK].map(([k, v]) => `<span><b>${k}</b>${v}</span>`).join("");
+document.getElementById("year").textContent = new Date().getFullYear();
+
+/* ---------- sfondo: curve parametriche che si disegnano ---------- */
+(() => {
+  if (reduce) return;
+  const cv = document.getElementById("curves"), ctx = cv.getContext("2d");
+  const COLORS = ["#ff7a59", "#ffb84d", "#7ee0b5", "#6fb6ff", "#b48cff", "#ff6fae"];
+  let W, H, dpr, mx = 0, my = 0;
+  const resize = () => { dpr = Math.min(devicePixelRatio || 1, 2); W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr; };
+  resize(); addEventListener("resize", resize);
+  addEventListener("pointermove", e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
+
+  const makers = [
+    (k) => a => { const r = Math.cos(k * a); return [r * Math.cos(a), r * Math.sin(a)]; },                         // rosa
+    (k) => a => [Math.sin((k + 1) * a + Math.PI / 2), Math.sin(k * a)],                                            // Lissajous
+    (k) => a => { const R = 1, r = .32 + k * .05, d = .55; return [((R - r) * Math.cos(a) + d * Math.cos((R - r) / r * a)) / 1.3, ((R - r) * Math.sin(a) - d * Math.sin((R - r) / r * a)) / 1.3]; }, // spirografo
+    (k) => a => { const r = Math.exp(Math.sin(a)) - 2 * Math.cos(4 * a) + Math.pow(Math.sin((2 * a - Math.PI) / 24), 5); return [r * Math.sin(a) / 3.2, -r * Math.cos(a) / 3.2]; }, // farfalla
+  ];
+  const curves = [];
+  function spawn(i) {
+    const mk = makers[(Math.random() * makers.length) | 0], k = 2 + ((Math.random() * 4) | 0);
+    return {
+      f: mk(k), t: 0, speed: .006 + Math.random() * .006, span: Math.PI * 2 * (2 + ((Math.random() * 6) | 0)),
+      x: .1 + Math.random() * .8, y: .1 + Math.random() * .8, s: (.12 + Math.random() * .18),
+      rot: Math.random() * 6, vr: (Math.random() - .5) * .002, color: COLORS[i % COLORS.length],
+      depth: .3 + Math.random(), life: 1, pts: []
+    };
+  }
+  for (let i = 0; i < 5; i++) curves.push(spawn(i));
+  let tick = 0;
+  (function frame() {
+    ctx.clearRect(0, 0, W, H);
+    const m = Math.min(W, H);
+    curves.forEach((c, i) => {
+      if (c.t < c.span) { for (let s = 0; s < 4; s++) { c.t += c.speed * 2.5; c.pts.push(c.f(c.t)); } }
+      else { c.life -= .004; if (c.life <= 0) { curves[i] = spawn(i + (++tick)); return; } }
+      c.rot += c.vr;
+      const cx = c.x * W + mx * 40 * dpr * c.depth, cy = c.y * H + my * 40 * dpr * c.depth, sc = c.s * m, cos = Math.cos(c.rot), sin = Math.sin(c.rot);
+      ctx.beginPath();
+      c.pts.forEach(([x, y], j) => { const X = cx + (x * cos - y * sin) * sc, Y = cy + (x * sin + y * cos) * sc; j ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+      ctx.strokeStyle = c.color; ctx.globalAlpha = .22 * c.life; ctx.lineWidth = 1.2 * dpr; ctx.stroke();
+      const last = c.pts[c.pts.length - 1];
+      if (last && c.t < c.span) { // punta luminosa
+        const X = cx + (last[0] * cos - last[1] * sin) * sc, Y = cy + (last[0] * sin + last[1] * cos) * sc;
+        ctx.globalAlpha = .9; ctx.fillStyle = c.color; ctx.shadowColor = c.color; ctx.shadowBlur = 16 * dpr;
+        ctx.beginPath(); ctx.arc(X, Y, 2.4 * dpr, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      }
+    });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(frame);
+  })();
+})();
+</script>
+</body>
+</html>
