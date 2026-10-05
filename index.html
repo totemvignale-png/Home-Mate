@@ -147,7 +147,7 @@ h1 .amp {
 .card {
   --c: var(--c1); --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%;
   position: relative; isolation: isolate; display: flex; flex-direction: column; gap: 14px;
-  min-height: 260px; padding: 22px; border-radius: var(--radius);
+  padding: 22px; border-radius: var(--radius);
   color: var(--chalk); text-decoration: none; overflow: hidden; cursor: pointer;
   background: linear-gradient(160deg, rgba(28,36,82,.72), rgba(10,14,36,.88));
   border: 1px solid var(--line);
@@ -181,7 +181,7 @@ h1 .amp {
 .card.shake { animation: shake .45s cubic-bezier(.36,.07,.19,.97); }
 @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 
-.card .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; transform: translateZ(30px); }
+.card .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .tag {
   font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
   color: var(--c); display: inline-flex; align-items: center; gap: 8px;
@@ -191,34 +191,37 @@ h1 .amp {
   font-family: var(--mono); font-size: 11px; color: var(--chalk-dim);
   border: 1px solid rgba(143,152,194,.25); border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px;
 }
-.plot { flex: 1; min-height: 96px; position: relative; transform: translateZ(50px); }
-.plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.plot .faint { fill: none; stroke: rgba(143,152,194,.22); stroke-width: 1; stroke-dasharray: 2 5; }
-.plot .solid { fill: color-mix(in srgb, var(--c) 18%, transparent); stroke: color-mix(in srgb, var(--c) 60%, transparent); stroke-width: 1.2; }
-.plot .curve {
-  fill: none; stroke: var(--c); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
-  stroke-dasharray: var(--len); stroke-dashoffset: 0;
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c) 70%, transparent));
-  animation: draw 2.4s cubic-bezier(.6,.1,.2,1) both; animation-delay: calc(var(--n) * 90ms + 1000ms);
+.cover {
+  position: relative; margin: -22px -22px 0; aspect-ratio: 600 / 340; max-width: none; overflow: hidden;
+  border-bottom: 1px solid var(--line); background: var(--ink-2);
 }
-.card:hover .curve { animation: draw 1.4s cubic-bezier(.6,.1,.2,1) both; }
-@keyframes draw { from { stroke-dashoffset: var(--len); } }
-.plot .ship { fill: var(--chalk); filter: drop-shadow(0 0 6px var(--c)); }
-.plot .sym {
-  position: absolute; right: -6px; bottom: -18px; font-family: var(--serif); font-style: italic;
-  font-size: 120px; line-height: 1; color: var(--c); opacity: .09; pointer-events: none;
-  transition: transform .6s cubic-bezier(.3,1.5,.5,1), opacity .4s;
+.cover img {
+  display: block; width: 100%; height: 100%; object-fit: cover;
+  transform: scale(1.02); transition: transform .8s cubic-bezier(.2,.8,.2,1), filter .5s;
+  filter: saturate(.92) brightness(.92);
 }
-.card:hover .sym { transform: translate(-10px, -8px) rotate(-10deg) scale(1.12); opacity: .2; }
-
+.card:hover .cover img, .card:focus-visible .cover img { transform: scale(1.09) translateY(-2%); filter: saturate(1.1) brightness(1.05); }
+.cover::after { /* sfumatura verso il testo */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(6,9,24,.35) 0%, transparent 30%, transparent 60%, rgba(10,14,36,.9) 100%);
+}
+.cover .top { position: absolute; z-index: 2; inset: 14px 14px auto 14px; transform: none; }
+.cover .tag { background: rgba(6,9,24,.7); backdrop-filter: blur(6px); padding: 5px 10px 5px 9px; border-radius: 999px; }
+.cover .key { background: rgba(6,9,24,.7); backdrop-filter: blur(6px); color: var(--chalk); }
+.card .shine { /* riflesso che attraversa la copertina */
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.22) 50%, transparent 60%);
+  transform: translateX(-120%);
+}
+.card:hover .shine { transition: transform .9s ease; transform: translateX(120%); }
 .card h2 {
-  margin: 0; font-size: clamp(24px, 2.4vw, 31px); font-weight: 700; letter-spacing: -.03em; line-height: 1.02;
+  margin: 6px 0 0; font-size: clamp(24px, 2.4vw, 31px); font-weight: 700; letter-spacing: -.03em; line-height: 1.02;
   transform: translateZ(40px); text-wrap: balance;
 }
 .card .desc { margin: 0; color: var(--chalk-dim); font-size: 14.5px; line-height: 1.45; transform: translateZ(25px); }
 .card .go {
   display: flex; justify-content: space-between; align-items: center; gap: 10px; transform: translateZ(35px);
-  font-family: var(--mono); font-size: 12px; color: var(--chalk-dim); padding-top: 12px;
+  font-family: var(--mono); font-size: 12px; color: var(--chalk-dim); padding-top: 12px; margin-top: auto;
   border-top: 1px dashed rgba(143,152,194,.2);
 }
 .card .go > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
@@ -303,15 +306,15 @@ footer kbd { font-family: inherit; border: 1px solid rgba(143,152,194,.25); bord
 /* ============================================================
    LE 6 MISSIONI — modifica qui nomi, descrizioni e indirizzi.
    url vuoto ("") = card segnata "link in arrivo".
-   art: infinity | star | rocket | asteroids | orbit | warp
+   img: immagine di copertina (svg, png, jpg o gif, formato 600×340)
    ============================================================ */
 const SITES = [
-  { name: "Viaggio nell'infinito", tag: "Esplora",  desc: "Un'avventura tra numeri che non finiscono mai. Fin dove riesci ad arrivare?", url: "https://infinito-mate.netlify.app", color: "var(--c1)", art: "infinity",  sym: "∞" },
-  { name: "Toy Story",             tag: "Avventura", desc: "Verso l'infinito e oltre: la sfida ispirata al film.",                    url: "", color: "var(--c2)", art: "star",      sym: "★" },
-  { name: "Razzo in codice",       tag: "Codice",    desc: "Costruisci il tuo razzo riga dopo riga, poi lancialo.",                   url: "", color: "var(--c3)", art: "rocket",    sym: "{ }" },
-  { name: "Pioggia di asteroidi",  tag: "Arcade",    desc: "Pilota la navicella e schiva tutto quello che arriva.",                   url: "", color: "var(--c4)", art: "asteroids", sym: "◇" },
-  { name: "Orbita perfetta",       tag: "Arcade",    desc: "Calcola la spinta giusta e resta in orbita il più a lungo possibile.",   url: "", color: "var(--c5)", art: "orbit",     sym: "○" },
-  { name: "Salto nell'iperspazio", tag: "Arcade",    desc: "Più vai veloce, più punti fai. Quanto resisti?",                         url: "", color: "var(--c6)", art: "warp",      sym: "⟫" },
+  { name: "Viaggio nell'infinito", tag: "Esplora",  desc: "Un'avventura tra numeri che non finiscono mai. Fin dove riesci ad arrivare?", url: "https://infinito-mate.netlify.app", color: "var(--c1)", img: "img/viaggio-infinito.svg" },
+  { name: "Toy Story",             tag: "Avventura", desc: "Verso l'infinito e oltre: la sfida ispirata al film.",                    url: "", color: "var(--c2)", img: "img/toy-story.svg" },
+  { name: "Razzo in codice",       tag: "Codice",    desc: "Costruisci il tuo razzo riga dopo riga, poi lancialo.",                   url: "", color: "var(--c3)", img: "img/razzo-codice.svg" },
+  { name: "Pioggia di asteroidi",  tag: "Arcade",    desc: "Pilota la navicella e schiva tutto quello che arriva.",                   url: "", color: "var(--c4)", img: "img/asteroidi.svg" },
+  { name: "Orbita perfetta",       tag: "Arcade",    desc: "Calcola la spinta giusta e resta in orbita il più a lungo possibile.",   url: "", color: "var(--c5)", img: "img/orbita.svg" },
+  { name: "Salto nell'iperspazio", tag: "Arcade",    desc: "Più vai veloce, più punti fai. Quanto resisti?",                         url: "", color: "var(--c6)", img: "img/iperspazio.svg" },
 ];
 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -335,49 +338,11 @@ const fine = matchMedia("(pointer: fine)").matches;
 const P = (pts) => pts.map(([x, y], k) => (k ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1)).join("");
 const sample = (f, n = 200) => Array.from({ length: n + 1 }, (_, k) => f(k / n));
 const lemniscate = (cx, cy, a, ky = 1) => t => { const u = t * Math.PI * 2, d = 1 + Math.sin(u) ** 2; return [cx + a * Math.cos(u) / d, cy + ky * a * Math.sin(u) * Math.cos(u) / d]; };
-const ellipse = (cx, cy, rx, ry, tilt = 0) => t => { const u = t * Math.PI * 2, x = rx * Math.cos(u), y = ry * Math.sin(u); return [cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)]; };
 
 /* il grande ∞ dell'intestazione */
 const bigInf = P(sample(lemniscate(200, 100, 190, 1.25), 300)) + "Z";
 document.getElementById("lemni").setAttribute("d", bigInf);
 document.getElementById("lemni2").setAttribute("d", bigInf);
-
-/* ogni disegno: extra (decorazioni), curve (si disegna), motion (percorso della navicella) */
-function art(kind) {
-  const W = 300, H = 110;
-  switch (kind) {
-    case "infinity": {
-      const d = P(sample(lemniscate(150, 55, 120, 1.1))) + "Z";
-      const d2 = P(sample(lemniscate(150, 55, 70, 1.1))) + "Z";
-      return { extra: `<path class="faint" d="${d2}"/>`, curve: d, motion: d, dur: 5 };
-    }
-    case "star": {
-      const star = (cx, cy, R, r) => P(Array.from({ length: 11 }, (_, k) => { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r : R; return [cx + rr * Math.cos(a), cy + rr * Math.sin(a)]; })) + "Z";
-      const arc = "M10 100 C 70 100, 120 20, 200 40";
-      return { extra: `<path class="faint" d="${star(230, 46, 40, 17)}"/>`, curve: arc + " " + star(230, 46, 30, 13), motion: arc + " C 260 55, 280 10, 300 -20", dur: 3.5 };
-    }
-    case "rocket": {
-      const r = "M150 6 C 168 22, 172 46, 170 74 L 130 74 C 128 46, 132 22, 150 6 Z M130 58 L 112 82 L 130 76 M170 58 L 188 82 L 170 76 M150 74 L 150 86 M150 30 m-8 0 a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0";
-      const code = "M40 30 L 22 46 L 40 62 M260 30 L 278 46 L 260 62";
-      return { extra: `<path class="faint" d="M150 90 L150 110 M142 92 L138 108 M158 92 L162 108"/>`, curve: r + " " + code, motion: "M150 100 L150 -30", dur: 2.6 };
-    }
-    case "asteroids": {
-      const rocks = [[70, 30, 12], [130, 78, 16], [200, 28, 10], [250, 80, 13]];
-      const rock = ([x, y, s]) => P(Array.from({ length: 8 }, (_, k) => { const a = k * Math.PI / 4, rr = s * (0.75 + 0.25 * Math.sin(k * 2.7 + x)); return [x + rr * Math.cos(a), y + rr * Math.sin(a)]; })) + "Z";
-      const path = "M0 60 C 40 60, 50 70, 90 58 S 120 30, 160 40 S 210 70, 230 52 S 280 40, 300 44";
-      return { extra: rocks.map(r => `<path class="solid" d="${rock(r)}"/>`).join(""), curve: path, motion: path, dur: 3.2 };
-    }
-    case "orbit": {
-      const o = P(sample(ellipse(150, 55, 120, 34, -0.12))) + "Z";
-      return { extra: `<circle class="solid" cx="150" cy="55" r="18"/><path class="faint" d="${P(sample(ellipse(150, 55, 70, 20, -0.12)))}Z"/>`, curve: o, motion: o, dur: 4 };
-    }
-    case "warp": {
-      let d = "";
-      for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8 + .2, r1 = 14 + (k % 3) * 6, r2 = 46 + (k % 4) * 14; d += `M${(150 + r1 * Math.cos(a) * 2.2).toFixed(1)} ${(55 + r1 * Math.sin(a)).toFixed(1)}L${(150 + r2 * Math.cos(a) * 2.2).toFixed(1)} ${(55 + r2 * Math.sin(a)).toFixed(1)}`; }
-      return { extra: `<circle class="faint" cx="150" cy="55" r="6"/>`, curve: d, motion: "M150 55 L 300 30", dur: 1.8 };
-    }
-  }
-}
 
 const grid = document.getElementById("grid");
 SITES.forEach((s, n) => {
@@ -388,13 +353,11 @@ SITES.forEach((s, n) => {
   a.style.setProperty("--c", s.color); a.style.setProperty("--n", n);
   let host = "link in arrivo";
   if (has) { try { host = new URL(s.url).host.replace(/^www\./, ""); } catch { host = s.url; } }
-  const g = art(s.art);
-  const ship = reduce ? "" : `<path class="ship" d="M7 0 L-5 -4.5 L-2.5 0 L-5 4.5 Z"><animateMotion dur="${g.dur}s" repeatCount="indefinite" rotate="auto" path="${g.motion}"/></path>`;
   a.innerHTML = `
-    <div class="top"><span class="tag">${s.tag}</span><span class="key" aria-hidden="true">${n + 1}</span></div>
-    <div class="plot" aria-hidden="true">
-      <svg viewBox="0 0 300 110" preserveAspectRatio="xMidYMid meet">${g.extra}<path class="curve" d="${g.curve}"/>${ship}</svg>
-      <span class="sym">${s.sym}</span>
+    <div class="cover">
+      <img src="${s.img}" alt="" width="600" height="340" loading="${n < 3 ? "eager" : "lazy"}" decoding="async">
+      <span class="shine"></span>
+      <div class="top"><span class="tag">${s.tag}</span><span class="key" aria-hidden="true">${n + 1}</span></div>
     </div>
     <h2>${s.name}</h2>
     <p class="desc">${s.desc}</p>
@@ -402,7 +365,6 @@ SITES.forEach((s, n) => {
       <span class="arrow" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
     </div>`;
   grid.appendChild(a);
-  const p = a.querySelector(".curve"); p.style.setProperty("--len", Math.ceil(p.getTotalLength() * 1.1));
   if (!has) {
     const nope = e => { e.preventDefault(); a.classList.remove("shake"); void a.offsetWidth; a.classList.add("shake"); };
     a.addEventListener("click", nope);

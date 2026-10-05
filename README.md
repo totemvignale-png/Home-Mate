@@ -12,7 +12,7 @@ In `index.html`, cerca l'array `SITES` all'inizio dello `<script>` e cambia per 
 - `desc` – descrizione breve
 - `url` – indirizzo del gioco (lascialo vuoto `""` per mostrare "link in arrivo")
 - `tag` – categoria (Esplora, Codice, Arcade…)
-- `art` – disegno animato della card: `infinity`, `star`, `rocket`, `asteroids`, `orbit`, `warp`
+- `img` – immagine di copertina della card (formato consigliato 600×340)
 - `sym` – simbolo decorativo sullo sfondo della card
 
 ## Effetti
@@ -23,3 +23,13 @@ In `index.html`, cerca l'array `SITES` all'inizio dello `<script>` e cambia per 
 - curiosità sull'infinito che cambiano nell'intestazione e nastro scorrevole di paradossi famosi
 - scorciatoie da tastiera `1`–`6` per aprire i siti
 - rispetta `prefers-reduced-motion` e funziona su mobile
+
+## Immagini
+
+Le copertine animate dei giochi sono in `img/` e sono generate da `tools/genera-immagini.py`:
+
+```
+python3 tools/genera-immagini.py
+```
+
+Per usare uno screenshot vero di un gioco, mettilo in `img/` (png, jpg o gif, meglio se 600×340 o più grande con le stesse proporzioni) e cambia il campo `img` di quel gioco in `index.html`.
