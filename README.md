@@ -54,6 +54,9 @@ In `buildfight/index.html` c'è un gioco 3D in stile Fortnite: una mappa da buil
 
 - griglia di costruzione come in Fortnite: **Q** muro, **E** rampa, **C** pavimento, clic sinistro per piazzare (tieni premuto per costruire veloce)
 - **1** piccone, **2** pompa, **3** fucile d'assalto, **R** ricarica, clic destro per mirare
+- **Shift** per accovacciarsi; premuto mentre corri fa scivolare (in discesa sulle rampe acceleri, saltando tieni la velocità)
+- **F** modifica i tuoi muri (3×3 riquadri) e pavimenti (2×2): trascina sui riquadri e rilascia per fare porte, finestre e archi, tasto destro ripristina
+- mira precisa: mirino che mostra la dispersione reale, primo colpo perfetto da fermo mirando o accovacciato, rosa fissa della pompa, mouse senza accelerazione
 - scudo e vita, colpi alla testa, danno da caduta, costruzioni che si rinforzano dopo essere piazzate e crollano se perdono la base
 - il bot spara, si copre con muri e rampe e fa ramp rush per prenderti l'altezza
 - round al meglio di 3, 5 o 7

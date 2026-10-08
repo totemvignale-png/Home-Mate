@@ -81,14 +81,20 @@ kbd { font: 700 12px var(--body); color: var(--chalk); background: rgba(255,255,
 .bar i { display: block; height: 100%; width: 100%; transition: width .12s; }
 .bar.sh i { background: var(--shield); } .bar.hp i { background: var(--hp); }
 
-#cross { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; transform: translate(-50%, -50%); }
-#cross::before, #cross::after { content: ""; position: absolute; background: #fff; box-shadow: 0 0 2px #000; }
-#cross::before { left: 10px; top: 0; width: 2px; height: 22px; }
-#cross::after { top: 10px; left: 0; height: 2px; width: 22px; }
-#cross.build { width: 16px; height: 16px; border: 2px solid var(--blue); border-radius: 3px; }
-#cross.build::before, #cross.build::after { display: none; }
-#cross.wide { width: 46px; height: 46px; border: 2px solid rgba(255,255,255,.8); border-radius: 50%; }
-#cross.wide::before, #cross.wide::after { display: none; }
+/* mirino: i quattro tratti si allargano con la dispersione reale dell'arma */
+#cross { position: absolute; left: 50%; top: 50%; width: 0; height: 0; --gap: 4px; }
+#cross i { position: absolute; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.55); }
+#cross .t, #cross .b { width: 2px; height: 8px; left: -1px; }
+#cross .l, #cross .r { height: 2px; width: 8px; top: -1px; }
+#cross .t { bottom: var(--gap); } #cross .b { top: var(--gap); }
+#cross .l { right: var(--gap); } #cross .r { left: var(--gap); }
+#cross b { position: absolute; left: -1px; top: -1px; width: 2px; height: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.55); }
+#cross.build i { display: none; }
+#cross.build b { left: -8px; top: -8px; width: 16px; height: 16px; background: none; border: 2px solid var(--blue); border-radius: 3px; box-shadow: none; }
+#cross.edit i { display: none; }
+#cross.edit b { left: -4px; top: -4px; width: 8px; height: 8px; background: var(--blue); border-radius: 50%; }
+#editHint { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%); font-family: var(--body); font-weight: 800; font-size: 13px; background: var(--panel); color: var(--blue); padding: 8px 14px; border-radius: 10px; white-space: nowrap; }
+#editHint b { color: var(--chalk); }
 #hitm { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; transform: translate(-50%, -50%) rotate(45deg); opacity: 0; }
 #hitm::before, #hitm::after { content: ""; position: absolute; background: #fff; }
 #hitm::before { left: 14px; top: 0; width: 2px; height: 30px; }
@@ -137,13 +143,13 @@ kbd { font: 700 12px var(--body); color: var(--chalk); background: rgba(255,255,
     <div id="score"><span class="me">TU <b id="sMe">0</b></span><span id="roundLbl">ROUND 1</span><span class="bot"><b id="sBot">0</b> BOT</span></div>
     <div id="botBars"><div id="botName">BOT</div><div class="bar sh"><i id="botSh"></i></div><div class="bar hp"><i id="botHp"></i></div></div>
   </div>
-  <div id="cross"></div><div id="hitm"></div>
+  <div id="cross"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i><b></b></div><div id="editHint" hidden>MODIFICA · trascina sui riquadri e rilascia per confermare · <b>F</b> conferma · tasto destro ripristina</div><div id="hitm"></div>
   <div id="center"></div>
   <div id="feed"></div>
   <div id="help">
-    <b>WASD</b> muoviti · <b>Spazio</b> salta<br>
+    <b>WASD</b> muoviti · <b>Spazio</b> salta · <b>Shift</b> accovacciati / scivola<br>
     <b>1</b> piccone · <b>2</b> pompa · <b>3</b> fucile · <b>R</b> ricarica<br>
-    <b>Q</b> muro · <b>E</b> rampa · <b>C</b> pavimento<br>
+    <b>Q</b> muro · <b>E</b> rampa · <b>C</b> pavimento · <b>F</b> modifica<br>
     <b>Clic</b> spara / costruisci (tieni premuto) · <b>Dx</b> mira<br>
     <b>H</b> nascondi aiuto · <b>Esc</b> o <b>P</b> pausa
   </div>
@@ -184,6 +190,8 @@ kbd { font: 700 12px var(--body); color: var(--chalk); background: rgba(255,255,
     <div class="keys">
       <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> muoviti</div>
       <div><kbd>Spazio</kbd> salta</div>
+      <div><kbd>Shift</kbd> accovacciati · mentre corri scivoli</div>
+      <div><kbd>F</kbd> modifica muro o pavimento</div>
       <div><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> piccone, pompa, fucile</div>
       <div><kbd>R</kbd> ricarica · rotella cambia arma</div>
       <div><kbd>Q</kbd> muro</div>
@@ -194,6 +202,7 @@ kbd { font: 700 12px var(--body); color: var(--chalk); background: rgba(255,255,
       <div><kbd>Esc</kbd> o <kbd>P</kbd> pausa</div>
     </div>
     <p class="note">Trucco: per salire veloce fai <b>rampa + muro</b> mentre corri in avanti (prima la rampa, poi il muro davanti). I pezzi devono toccare il terreno o un'altra costruzione: se togli la base, crolla tutto quello che c'è sopra.</p>
+    <p class="note">Modifica: guarda un tuo muro o pavimento e premi <b>F</b>, trascina sui riquadri da togliere (porta, finestra, arco…) e rilascia il clic. Tasto destro ripristina il pezzo. Scivolata: corri e premi <b>Shift</b>, poi salta per tenere la velocità; in discesa sulle rampe acceleri.</p>
     <p class="note" id="mobileNote" hidden>Questo gioco richiede un computer con tastiera e mouse.</p>
   </div>
 </div>
@@ -226,6 +235,7 @@ import * as THREE from "three";
 const T = 5, H = 3.75, N = 16, MAXL = 14;
 const WORLD = N * T;
 const R = 0.4, PH = 1.8, EYE = 1.62, G = 28, JUMP = 9.2, SPEED = 7.6, STEP = 0.45;
+const CROUCH_H = 1.2, CROUCH_EYE = 1.0, SLIDE_SPEED = 12.5;
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]]; // +x, -x, +z, -z
 const SLOPE = Math.hypot(T, H), ANG = Math.atan2(H, T);
 const MAXHP = { wall: 150, floor: 140, ramp: 140 };
@@ -234,9 +244,11 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 const WEAPONS = {
   pickaxe: { name: "Piccone", dmg: 20, sdmg: 50, rate: 1.6, range: 2.8, pellets: 1, spread: 0, mag: 0, reload: 0, head: 1, recoil: 0.01 },
-  shotgun: { name: "Pompa", dmg: 9, sdmg: 9, rate: 1.05, range: 45, pellets: 10, spread: 0.065, mag: 5, reload: 2.2, head: 2, recoil: 0.06, falloff: true },
-  ar: { name: "Fucile d'assalto", dmg: 30, sdmg: 30, rate: 5.5, range: 160, pellets: 1, spread: 0.014, mag: 30, reload: 2.0, head: 1.5, recoil: 0.012 },
+  shotgun: { name: "Pompa", dmg: 9, sdmg: 9, rate: 1.05, range: 45, pellets: 10, spread: 0.055, mag: 5, reload: 2.2, head: 2, recoil: 0.05, falloff: true },
+  ar: { name: "Fucile d'assalto", dmg: 30, sdmg: 30, rate: 5.5, range: 160, pellets: 1, spread: 0.011, mag: 30, reload: 2.0, head: 1.5, recoil: 0.007, bloom: 0.0045, maxBloom: 0.028 },
 };
+
+const SG_PATTERN = [[0, 0], [0.45, 0], [-0.45, 0], [0, 0.45], [0, -0.45], [0.8, 0.5], [-0.8, 0.5], [0.8, -0.5], [-0.8, -0.5], [0, 0.95]];
 
 const DIFF = {
   facile:    { err: 0.09,  react: 0.7,  turn: 5,  build: 0.3,  buildCd: 1.4,  jump: 0.3, fire: 0.55, head: 0.05, name: "Facile" },
@@ -351,7 +363,7 @@ const GEO = {
 };
 const woodMat = new THREE.MeshLambertMaterial({ map: woodTex });
 const structs = new Map();
-let structMeshes = [], boxStructs = [], rampStructs = [];
+let structMeshes = [], boxList = [], rampStructs = [];
 
 const keyOf = sp => sp.type === "wall" ? `w${sp.axis},${sp.i},${sp.k},${sp.L}` : `${sp.type[0]},${sp.i},${sp.k},${sp.L}`;
 
@@ -401,8 +413,8 @@ function rampHeight(s, x, z) {
 
 function rebuildLists() {
   const all = [...structs.values()];
-  structMeshes = all.map(s => s.mesh);
-  boxStructs = all.filter(s => s.box);
+  structMeshes = all.flatMap(s => s.meshes);
+  boxList = all.flatMap(s => s.boxes.map(b => ({ s, b })));
   rampStructs = all.filter(s => s.type === "ramp");
 }
 
@@ -425,16 +437,43 @@ function canPlace(sp) {
   return false;
 }
 
-function addStruct(sp) {
+/* ---------- modifiche (edit): un muro è fatto di 3×3 riquadri, un pavimento di 2×2 ---------- */
+const TILE_GEO = { wallX: new THREE.BoxGeometry(0.3, H / 3, T / 3), wallZ: new THREE.BoxGeometry(T / 3, H / 3, 0.3), floor: new THREE.BoxGeometry(T / 2, 0.2, T / 2) };
+const tileCount = s => s.type === "wall" ? 9 : 4;
+function tileInfo(s, n) {
+  const { i, k, L } = s;
+  if (s.type === "wall") {
+    const r = Math.floor(n / 3), c = n % 3, y0 = L * H + r * H / 3;
+    if (s.axis === "x") { const z0 = k * T + c * T / 3; return { c: [i * T, y0 + H / 6, z0 + T / 6], box: [i * T - 0.15, y0, z0, i * T + 0.15, y0 + H / 3, z0 + T / 3] }; }
+    const x0 = i * T + c * T / 3; return { c: [x0 + T / 6, y0 + H / 6, k * T], box: [x0, y0, k * T - 0.15, x0 + T / 3, y0 + H / 3, k * T + 0.15] };
+  }
+  const a = Math.floor(n / 2), b = n % 2, x0 = i * T + a * T / 2, z0 = k * T + b * T / 2;
+  return { c: [x0 + T / 4, L * H - 0.1, z0 + T / 4], box: [x0, L * H - 0.2, z0, x0 + T / 2, L * H, z0 + T / 2] };
+}
+function buildPieceMeshes(s) {
+  for (const m of s.meshes) scene.remove(m);
+  s.meshes = []; s.boxes = [];
+  if (!s.removed.size) {
+    const m = new THREE.Mesh(GEO.floor, s.mat); placeMesh(m, s); s.meshes.push(m);
+    if (s.type !== "ramp") s.boxes.push(boxOf(s));
+  } else {
+    const geo = s.type === "wall" ? (s.axis === "x" ? TILE_GEO.wallX : TILE_GEO.wallZ) : TILE_GEO.floor;
+    for (let n = 0; n < tileCount(s); n++) {
+      if (s.removed.has(n)) continue;
+      const t = tileInfo(s, n), m = new THREE.Mesh(geo, s.mat);
+      m.position.set(...t.c); s.meshes.push(m); s.boxes.push(t.box);
+    }
+  }
+  for (const m of s.meshes) { m.castShadow = m.receiveShadow = true; m.userData.struct = s; scene.add(m); m.updateMatrixWorld(); }
+}
+
+function addStruct(sp, owner = null) {
   const key = keyOf(sp);
   if (structs.has(key)) return null;
-  const mesh = new THREE.Mesh(GEO.floor, woodMat.clone());
-  placeMesh(mesh, sp);
-  mesh.castShadow = mesh.receiveShadow = true;
-  scene.add(mesh); mesh.updateMatrixWorld();
   const pts = ptsOf(sp);
-  const s = { ...sp, key, mesh, maxHp: MAXHP[sp.type], hp: MAXHP[sp.type] * 0.3, box: sp.type === "ramp" ? null : boxOf(sp), pts, ptsK: pts.map(p => p.join(",")) };
-  mesh.userData.struct = s;
+  const s = { ...sp, key, owner, mat: woodMat.clone(), meshes: [], boxes: [], removed: new Set(), maxHp: MAXHP[sp.type], hp: MAXHP[sp.type] * 0.3, pts, ptsK: pts.map(p => p.join(",")) };
+  buildPieceMeshes(s);
+  s.center = s.meshes[0].position.clone();
   structs.set(key, s);
   tintStruct(s);
   rebuildLists();
@@ -443,14 +482,15 @@ function addStruct(sp) {
 
 function tintStruct(s) {
   const f = s.hp / s.maxHp;
-  s.mesh.material.color.setRGB(0.45 + 0.55 * f, 0.4 + 0.6 * f, 0.4 + 0.6 * f);
+  s.mat.color.setRGB(0.45 + 0.55 * f, 0.4 + 0.6 * f, 0.4 + 0.6 * f);
 }
 
 function removeStruct(s, fx = true) {
   if (!structs.has(s.key)) return;
   structs.delete(s.key);
-  scene.remove(s.mesh); s.mesh.material.dispose();
-  if (fx) burst(s.mesh.position, 7);
+  for (const m of s.meshes) scene.remove(m);
+  s.mat.dispose();
+  if (fx) burst(s.center, 7);
 }
 
 function damageStruct(s, amount) {
@@ -526,19 +566,20 @@ function buildSpec(e, type) {
 function tryBuild(e, type) {
   const sp = buildSpec(e, type);
   if (!canPlace(sp)) return null;
-  const s = addStruct(sp);
+  const s = addStruct(sp, e);
   if (!s) return null;
+  const box = s.boxes[0];
   // spingi fuori chi si trova dentro il pezzo appena costruito
   for (const o of entities) {
     if (!o.alive) continue;
-    if (s.type === "wall" && overlaps(o, s.box)) {
+    if (s.type === "wall" && overlaps(o, box)) {
       if (s.axis === "x") { const pl = s.i * T; o.pos.x = pl + (o.pos.x >= pl ? 1 : -1) * (0.15 + R + 0.02); }
       else { const pl = s.k * T; o.pos.z = pl + (o.pos.z >= pl ? 1 : -1) * (0.15 + R + 0.02); }
     } else if (s.type === "ramp") {
       const h = rampHeight(s, o.pos.x, o.pos.z);
-      if (h !== null && o.pos.y < h && h - o.pos.y < PH + 0.4) { o.pos.y = h; o.vel.y = Math.max(0, o.vel.y); }
-    } else if (s.type === "floor" && overlaps(o, s.box) && o.pos.y > s.box[1] - 1) {
-      o.pos.y = s.box[4]; o.vel.y = Math.max(0, o.vel.y);
+      if (h !== null && o.pos.y < h && h - o.pos.y < o.h + 0.4) { o.pos.y = h; o.vel.y = Math.max(0, o.vel.y); }
+    } else if (s.type === "floor" && overlaps(o, box) && o.pos.y > box[1] - 1) {
+      o.pos.y = box[4]; o.vel.y = Math.max(0, o.vel.y);
     }
   }
   const d = e === player ? 0 : e.pos.distanceTo(player.pos);
@@ -551,19 +592,19 @@ function tryBuild(e, type) {
    ========================================================= */
 function makeEntity(isBot) {
   return { isBot, pos: new V3(), vel: new V3(), yaw: 0, pitch: 0, grounded: false, wasGrounded: false, support: null, rampMem: null,
+    h: PH, eye: EYE, crouch: false, slideT: 0, bloom: 0,
     hp: 100, shield: 100, alive: true, weapon: "ar", ammo: { shotgun: 5, ar: 30 }, cd: 0, reloadT: 0, equipT: 0, hitboxes: [] };
 }
 const player = makeEntity(false), bot = makeEntity(true);
 const entities = [player, bot];
 
 function overlaps(e, b) {
-  return e.pos.x + R > b[0] && e.pos.x - R < b[3] && e.pos.y + PH > b[1] && e.pos.y < b[4] && e.pos.z + R > b[2] && e.pos.z - R < b[5];
+  return e.pos.x + R > b[0] && e.pos.x - R < b[3] && e.pos.y + e.h > b[1] && e.pos.y < b[4] && e.pos.z + R > b[2] && e.pos.z - R < b[5];
 }
 
 function collideH(e, ax) {
   const p = ax === 0 ? "x" : "z";
-  for (const s of boxStructs) {
-    const b = s.box;
+  for (const { b } of boxList) {
     if (!overlaps(e, b)) continue;
     if (b[4] - e.pos.y <= STEP) { e.pos.y = b[4]; e.vel.y = Math.max(e.vel.y, 0); continue; } // gradino
     const lo = b[ax], hi = b[ax + 3], c = e.pos[p];
@@ -572,11 +613,10 @@ function collideH(e, ax) {
 }
 
 function collideV(e, prevY) {
-  for (const s of boxStructs) {
-    const b = s.box;
+  for (const { s, b } of boxList) {
     if (!overlaps(e, b)) continue;
     if (e.vel.y <= 0 && prevY >= b[4] - 0.06) { e.pos.y = b[4]; e.vel.y = 0; e.grounded = true; e.support = s; }
-    else if (e.vel.y > 0 && prevY + PH <= b[1] + 0.06) { e.pos.y = b[1] - PH - 0.001; e.vel.y = 0; }
+    else if (e.vel.y > 0 && prevY + e.h <= b[1] + 0.06) { e.pos.y = b[1] - e.h - 0.001; e.vel.y = 0; }
   }
 }
 
@@ -607,12 +647,28 @@ function moveEntity(e, f, s, yaw, dt, speed = SPEED) {
   let wx = fx * f + rx * s, wz = fz * f + rz * s;
   const l = Math.hypot(wx, wz);
   if (l > 1) { wx /= l; wz /= l; }
+  const before = Math.hypot(e.vel.x, e.vel.z);
   const k = Math.min(1, (e.grounded ? 14 : 4) * dt);
   e.vel.x += (wx * speed - e.vel.x) * k;
   e.vel.z += (wz * speed - e.vel.z) * k;
+  // in aria si conserva lo slancio (salto dalla scivolata)
+  const after = Math.hypot(e.vel.x, e.vel.z);
+  if (!e.grounded && before > speed && after < before && after > 0.01) {
+    const keep = Math.max(after, before - 3 * dt) / after;
+    e.vel.x *= keep; e.vel.z *= keep;
+  }
 }
 
-const eyePos = e => new V3(e.pos.x, e.pos.y + EYE, e.pos.z);
+// accovacciarsi: ci si rialza solo se c'è spazio sopra la testa
+function setCrouch(e, low) {
+  if (low) { e.h = CROUCH_H; e.crouch = true; return; }
+  if (!e.crouch) return;
+  e.h = PH;
+  if (boxList.some(({ b }) => overlaps(e, b))) { e.h = CROUCH_H; return; }
+  e.crouch = false;
+}
+
+const eyePos = e => new V3(e.pos.x, e.pos.y + e.eye, e.pos.z);
 
 /* ---------- modelli e hitbox ---------- */
 const botModel = new THREE.Group();
@@ -714,14 +770,16 @@ function shoot(e, aim) {
   const other = e === player ? bot : player;
   const targets = structMeshes.concat(envMeshes, other.alive ? other.hitboxes : []);
   const muzzle = muzzleOf(e);
-  let spread = w.spread;
-  if (e === player && e.weapon === "ar") {
-    const moving = Math.hypot(e.vel.x, e.vel.z) > 1;
-    spread *= (aiming ? 0.35 : 1) * (moving ? 1.8 : 1) * (e.grounded ? 1 : 2.5);
-  }
+  const spread = e === player ? playerSpread() : w.spread;
+  const right = new V3().crossVectors(aim, new V3(0, 1, 0)).normalize(), up = new V3().crossVectors(right, aim).normalize();
   let dealt = 0, head = false, hitPt = null, wasShield = false;
   for (let p = 0; p < w.pellets; p++) {
-    const d = spreadDir(aim, spread);
+    let d;
+    if (e.weapon === "shotgun") {
+      const [px, py] = SG_PATTERN[p % SG_PATTERN.length];
+      d = aim.clone().addScaledVector(right, px * spread).addScaledVector(up, py * spread);
+      d = spreadDir(d.normalize(), spread * 0.12);
+    } else d = spreadDir(aim, spread);
     ray.set(origin, d); ray.far = w.range;
     const h = ray.intersectObjects(targets, false)[0];
     const end = h ? h.point : origin.clone().addScaledVector(d, w.range);
@@ -744,7 +802,19 @@ function shoot(e, aim) {
   }
   const vol = e === player ? 1 : clamp(1 - e.pos.distanceTo(player.pos) / 90, 0.15, 1);
   sfx[e.weapon](vol);
-  if (e === player) { vmKick = 1; recoil += w.recoil; }
+  if (w.bloom) e.bloom = Math.min(w.maxBloom, e.bloom + w.bloom);
+  if (e === player) { vmKick = 1; recoil += w.recoil * (player.crouch ? 0.6 : 1); }
+}
+
+// dispersione attuale dell'arma del giocatore (radianti): la usa anche il mirino
+function playerSpread() {
+  const e = player, w = WEAPONS[e.weapon];
+  if (!w.spread) return 0;
+  const moving = Math.hypot(e.vel.x, e.vel.z) > 1.2;
+  if (e.weapon === "shotgun") return w.spread * (aiming ? 0.8 : 1) * (e.grounded ? 1 : 1.25);
+  // primo colpo perfetto se sei fermo e miri o sei accovacciato
+  if (!moving && e.grounded && (aiming || e.crouch) && e.bloom < 0.002) return 0;
+  return w.spread * (aiming ? 0.35 : 1) * (e.crouch ? 0.6 : 1) * (moving ? 1.8 : 1) * (e.grounded ? 1 : 2.5) + e.bloom * (aiming ? 0.6 : 1);
 }
 
 function startReload(e) {
@@ -771,6 +841,7 @@ function equip(e, w) {
 
 function tickWeapon(e, dt) {
   e.cd = Math.max(0, e.cd - dt);
+  e.bloom = Math.max(0, e.bloom - dt * 0.07);
   e.equipT = Math.max(0, e.equipT - dt);
   if (e.reloadT > 0) {
     e.reloadT -= dt;
@@ -890,6 +961,7 @@ function spawn(e, z, yaw) {
   e.pos.set(WORLD / 2 + T / 2, 0, z); e.vel.set(0, 0, 0); e.yaw = yaw; e.pitch = 0;
   e.hp = 100; e.shield = 100; e.alive = true; e.ammo = { shotgun: 5, ar: 30 }; e.cd = 0; e.reloadT = 0; e.equipT = 0;
   e.support = null; e.rampMem = null; e.grounded = true;
+  e.h = PH; e.eye = EYE; e.crouch = false; e.slideT = 0; e.bloom = 0;
 }
 
 function startMatch() {
@@ -897,6 +969,7 @@ function startMatch() {
   startRound();
 }
 function startRound() {
+  endEdit(false);
   clearStructs();
   spawn(player, WORLD - 12.5, 0);
   spawn(bot, 12.5, Math.PI);
@@ -976,9 +1049,12 @@ addEventListener("keydown", e => {
   if (!inGame) return;
   keys[e.code] = true;
   if (e.code === "Space" || e.code.startsWith("Digit")) e.preventDefault();
+  if (e.repeat) return;
+  if (e.code === "KeyF") { editing ? endEdit(true) : startEdit(); return; }
+  if (editing && (BUILD_KEYS[e.code] || WEAPON_KEYS[e.code])) endEdit(false);
   if (BUILD_KEYS[e.code]) buildPiece = BUILD_KEYS[e.code];
   if (WEAPON_KEYS[e.code]) { buildPiece = null; equip(player, WEAPON_KEYS[e.code]); }
-  if (e.code === "KeyR" && !buildPiece) startReload(player);
+  if (e.code === "KeyR" && !buildPiece && !editing) startReload(player);
   if (e.code === "KeyH") helpEl.hidden = !helpEl.hidden;
   if (e.code === "KeyP" && !paused) { document.exitPointerLock?.(); setPaused(true); }
 });
@@ -987,10 +1063,18 @@ addEventListener("blur", () => { for (const k in keys) keys[k] = false; mouseDow
 canvas.addEventListener("mousedown", e => {
   if (!inGame || paused) return;
   if (!locked && !freeLook) { lockPointer(); return; }
+  if (editing) {
+    if (e.button === 0) { mouseDown = true; editing.drag = null; }
+    if (e.button === 2) { editing.sel.clear(); endEdit(true); } // ripristina il pezzo
+    return;
+  }
   if (e.button === 0) { mouseDown = true; buildCd = 0; }
   if (e.button === 2) aiming = true;
 });
-addEventListener("mouseup", e => { if (e.button === 0) mouseDown = false; if (e.button === 2) aiming = false; });
+addEventListener("mouseup", e => {
+  if (e.button === 0) { mouseDown = false; if (editing && editing.drag !== null) endEdit(true); } // modifica al rilascio
+  if (e.button === 2) aiming = false;
+});
 addEventListener("contextmenu", e => { if (inGame) e.preventDefault(); });
 addEventListener("mousemove", e => {
   if ((!locked && !freeLook) || paused) return;
@@ -1007,7 +1091,9 @@ addEventListener("wheel", e => {
 
 // se il browser non concede la cattura del mouse, si guarda intorno muovendo il mouse sul gioco
 function lockPointer() {
-  try { const p = canvas.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch {}
+  // movimento "grezzo" del mouse senza accelerazione del sistema, se il browser lo permette
+  const req = opts => { try { const p = canvas.requestPointerLock(opts); return p && p.then ? p : Promise.resolve(); } catch (err) { return Promise.reject(err); } };
+  req({ unadjustedMovement: true }).catch(() => req().catch(() => {}));
   setTimeout(() => {
     if (!locked && inGame && !paused) { freeLook = true; lockHint.textContent = "Mouse non catturato: muovi il mouse sul gioco per guardarti intorno · P per la pausa"; lockHint.hidden = false; }
   }, 700);
@@ -1030,6 +1116,7 @@ function setPaused(p) {
    ========================================================= */
 const $ = id => document.getElementById(id);
 const hudEl = $("hud"), centerEl = $("center"), helpEl = $("help"), vignette = $("vignette"), lockHint = $("lockHint");
+const editHint = $("editHint");
 const menuEl = $("menu"), pauseEl = $("pause"), endEl = $("end"), crossEl = $("cross"), hitmEl = $("hitm");
 const slotEls = [...document.querySelectorAll(".slot")];
 
@@ -1048,7 +1135,7 @@ function dmgNumber(pos, amount, kind) {
 let lastHud = "";
 function updateHud(dt) {
   const w = WEAPONS[player.weapon];
-  const sig = [player.hp, player.shield, bot.hp, bot.shield, player.weapon, buildPiece, player.ammo.shotgun, player.ammo.ar, player.reloadT > 0, aiming].join("|");
+  const sig = [player.hp, player.shield, bot.hp, bot.shield, player.weapon, buildPiece, player.ammo.shotgun, player.ammo.ar, player.reloadT > 0, aiming, !!editing].join("|");
   if (sig !== lastHud) {
     lastHud = sig;
     $("vSh").textContent = Math.ceil(player.shield); $("bSh").style.width = player.shield + "%";
@@ -1057,8 +1144,12 @@ function updateHud(dt) {
     $("ammo").innerHTML = buildPiece ? `∞ <small>legno</small>` : w.mag ? `${player.ammo[player.weapon]} <small>/ ∞</small>` : `— <small>${w.name}</small>`;
     $("reload").textContent = player.reloadT > 0 ? "RICARICA…" : "";
     for (const s of slotEls) s.classList.toggle("on", buildPiece ? s.dataset.b === buildPiece : s.dataset.w === player.weapon);
-    crossEl.className = buildPiece ? "build" : player.weapon === "shotgun" ? "wide" : "";
+    crossEl.className = editing ? "edit" : buildPiece ? "build" : "";
+    editHint.hidden = !editing;
   }
+  // distanza dei tratti del mirino = dispersione reale (in pixel)
+  const pxPerRad = innerHeight / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+  crossEl.style.setProperty("--gap", (3 + playerSpread() * pxPerRad).toFixed(1) + "px");
   hitmT -= dt; hitmEl.style.opacity = hitmT > 0 ? 1 : 0;
   for (let i = dmgNums.length - 1; i >= 0; i--) {
     const n = dmgNums[i]; n.t += dt;
@@ -1099,11 +1190,72 @@ const sfx = {
   hit: () => tone(1300, 0.05, 0.18, "sine"),
   head: () => { tone(1900, 0.08, 0.22, "sine"); tone(2600, 0.06, 0.12, "sine"); },
   breakIt: () => noise(0.25, 700, 0.5),
+  slide: () => noise(0.45, 600, 0.3),
+  edit: () => tone(880, 0.05, 0.12, "triangle", 1320),
   hurt: () => tone(170, 0.15, 0.25, "sawtooth", 90),
   go: () => tone(520, 0.25, 0.25, "square", 1040),
   win: () => { tone(660, 0.12, 0.25, "square"); setTimeout(() => tone(880, 0.2, 0.25, "square"), 110); },
   lose: () => tone(300, 0.4, 0.25, "sawtooth", 110),
 };
+
+/* =========================================================
+   Modifica dei pezzi (edit)
+   ========================================================= */
+let editing = null;
+const editOn = new THREE.MeshBasicMaterial({ color: 0x4fc3ff, transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false });
+const editOff = new THREE.MeshBasicMaterial({ color: 0xff4d5e, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false });
+
+function startEdit() {
+  if (!inGame || paused || state === "menu" || !player.alive) return;
+  updateCamera();
+  const d = new V3(); camera.getWorldDirection(d);
+  ray.set(camera.position, d); ray.far = 7;
+  const h = ray.intersectObjects(structMeshes, false)[0];
+  if (!h) return;
+  const s = h.object.userData.struct;
+  if (s.owner !== player) { feed("Puoi modificare solo le tue costruzioni"); return; }
+  if (s.type === "ramp") { feed("Si possono modificare muri e pavimenti"); return; }
+  editing = { s, sel: new Set(s.removed), tiles: [], drag: null, prev: buildPiece };
+  buildPiece = null; mouseDown = false;
+  const cam = camera.position;
+  for (let n = 0; n < tileCount(s); n++) {
+    const t = tileInfo(s, n);
+    const g = s.type === "wall" ? new THREE.PlaneGeometry(T / 3 - 0.14, H / 3 - 0.14) : new THREE.PlaneGeometry(T / 2 - 0.16, T / 2 - 0.16);
+    const m = new THREE.Mesh(g, editOn);
+    m.position.set(...t.c);
+    if (s.type === "wall") {
+      if (s.axis === "x") { m.rotation.y = Math.PI / 2; m.position.x += cam.x > s.i * T ? 0.17 : -0.17; }
+      else m.position.z += cam.z > s.k * T ? 0.17 : -0.17;
+    } else { m.rotation.x = -Math.PI / 2; m.position.y = cam.y > s.L * H ? s.L * H + 0.03 : s.L * H - 0.23; }
+    m.renderOrder = 2; m.userData.tile = n;
+    scene.add(m); m.updateMatrixWorld(); editing.tiles.push(m);
+  }
+  refreshEditTiles();
+  sfx.edit();
+}
+function refreshEditTiles() { for (const m of editing.tiles) m.material = editing.sel.has(m.userData.tile) ? editOff : editOn; }
+// trascina sui riquadri: il primo decide se togli o rimetti
+function editPointer() {
+  updateCamera();
+  const d = new V3(); camera.getWorldDirection(d);
+  ray.set(camera.position, d); ray.far = 12;
+  const h = ray.intersectObjects(editing.tiles, false)[0];
+  if (!h) return;
+  const n = h.object.userData.tile;
+  if (editing.drag === null) editing.drag = !editing.sel.has(n);
+  if (editing.drag) editing.sel.add(n); else editing.sel.delete(n);
+  refreshEditTiles();
+}
+function endEdit(apply) {
+  const e = editing;
+  if (!e) return;
+  for (const m of e.tiles) { scene.remove(m); m.geometry.dispose(); }
+  editing = null; buildPiece = e.prev; mouseDown = false;
+  if (apply && structs.has(e.s.key) && e.sel.size < tileCount(e.s)) {
+    const same = e.sel.size === e.s.removed.size && [...e.sel].every(n => e.s.removed.has(n));
+    if (!same) { e.s.removed = new Set(e.sel); buildPieceMeshes(e.s); rebuildLists(); sfx.edit(); }
+  }
+}
 
 /* =========================================================
    Ciclo principale
@@ -1124,15 +1276,45 @@ function update(dt) {
 
   // --- tu ---
   if (player.alive) {
+    const p = player;
     const f = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0), s = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
-    moveEntity(player, frozen ? 0 : f, frozen ? 0 : s, player.yaw, dt, SPEED * (aiming && !buildPiece ? 0.65 : 1));
-    if (keys.Space && player.grounded && !frozen) { player.vel.y = JUMP; player.grounded = false; }
-    physics(player, dt);
+    const wantCrouch = !frozen && !!(keys.ShiftLeft || keys.ShiftRight);
+    const hs = Math.hypot(p.vel.x, p.vel.z);
+    // scivolata: accovacciati mentre corri
+    if (wantCrouch && !p.crouchHeld && p.grounded && hs > 5.5) {
+      p.slideT = 1.1; const k = Math.max(hs, SLIDE_SPEED) / hs; p.vel.x *= k; p.vel.z *= k; sfx.slide();
+    }
+    p.crouchHeld = wantCrouch;
+    if (p.slideT > 0) {
+      p.slideT -= dt;
+      const sp = Math.hypot(p.vel.x, p.vel.z) || 0.001;
+      let acc = p.grounded ? -6 : 0, downhill = false;
+      if (p.support && p.support.type === "ramp") {
+        const [sx, sz] = DIRS[p.support.dir], along = (p.vel.x * sx + p.vel.z * sz) / sp;
+        acc -= along * 15; downhill = along < -0.3;
+      }
+      const ns = clamp(sp + acc * dt, 0, 17);
+      // si sterza un po' con lo sguardo
+      const a = approachAngle(Math.atan2(p.vel.x, p.vel.z), Math.atan2(-Math.sin(p.yaw), -Math.cos(p.yaw)), 1.6 * dt);
+      p.vel.x = Math.sin(a) * ns; p.vel.z = Math.cos(a) * ns;
+      if (downhill) p.slideT = Math.max(p.slideT, 0.3);
+      if (!wantCrouch || ns < 3.5) p.slideT = 0;
+      if (keys.Space && p.grounded) { p.vel.y = JUMP * 0.95; p.grounded = false; p.slideT = 0; } // salto in scivolata: tieni la velocità
+    } else {
+      const mul = (aiming && !buildPiece ? 0.65 : 1) * (p.crouch ? 0.5 : 1);
+      moveEntity(p, frozen ? 0 : f, frozen ? 0 : s, p.yaw, dt, SPEED * mul);
+      if (keys.Space && p.grounded && !frozen) { p.vel.y = JUMP; p.grounded = false; }
+    }
+    setCrouch(p, (wantCrouch && (p.grounded || p.crouch)) || p.slideT > 0);
+    p.eye += ((p.crouch ? CROUCH_EYE : EYE) - p.eye) * Math.min(1, dt * 14);
+    physics(p, dt);
   }
   syncModels();
   tickWeapon(player, dt);
   buildCd -= dt;
-  if (canAct && player.alive && mouseDown) {
+  if (editing && (!structs.has(editing.s.key) || editing.s.center.distanceTo(player.pos) > 12 || !player.alive)) endEdit(false);
+  if (editing && mouseDown) editPointer();
+  else if (canAct && player.alive && mouseDown) {
     if (buildPiece) { if (buildCd <= 0 && tryBuild(player, buildPiece)) buildCd = 0.06; }
     else { updateCamera(); const d = new V3(); camera.getWorldDirection(d); tryFire(player, d); }
   }
@@ -1158,12 +1340,12 @@ function update(dt) {
     const d = debris[i]; d.t -= dt; d.v.y -= 20 * dt; d.m.position.addScaledVector(d.v, dt); d.m.rotation.x += dt * 5; d.m.scale.setScalar(Math.max(0.01, d.t));
     if (d.t <= 0) { scene.remove(d.m); debris.splice(i, 1); }
   }
-  recoil = Math.max(0, recoil - dt * 0.25);
+  recoil = Math.max(0, recoil - dt * (0.12 + recoil * 6));
   updateHud(dt);
 }
 
 function updateCamera() {
-  camera.position.set(player.pos.x, player.pos.y + EYE, player.pos.z);
+  camera.position.set(player.pos.x, player.pos.y + player.eye, player.pos.z);
   camera.rotation.set(player.pitch + recoil * 0.6, player.yaw, 0, "YXZ");
   camera.updateMatrixWorld();
 }
@@ -1173,7 +1355,7 @@ function syncModels() {
   botModel.position.copy(bot.pos); botModel.rotation.y = bot.yaw;
   bot.gunMesh.scale.z = bot.weapon === "shotgun" ? 0.8 : 1;
   botModel.updateMatrixWorld(true);
-  playerHB.position.copy(player.pos); playerHB.updateMatrixWorld(true);
+  playerHB.position.copy(player.pos); playerHB.scale.y = player.h / PH; playerHB.updateMatrixWorld(true);
 }
 
 function render(dt) {
@@ -1200,7 +1382,7 @@ function render(dt) {
   } else ghost.visible = false;
 
   // arma in mano
-  const showVm = inGame && !buildPiece && player.alive;
+  const showVm = inGame && !buildPiece && !editing && player.alive;
   for (const k in vmModels) vmModels[k].visible = showVm && player.weapon === k;
   const speed = Math.hypot(player.vel.x, player.vel.z);
   bob += dt * speed * (player.grounded ? 1.6 : 0);
@@ -1248,7 +1430,7 @@ $("resume").addEventListener("click", () => { lockPointer(); setPaused(false); }
 const toMenu = () => {
   inGame = false; paused = false; state = "menu";
   pauseEl.hidden = endEl.hidden = true; hudEl.hidden = true; menuEl.hidden = false;
-  document.exitPointerLock?.(); clearStructs();
+  document.exitPointerLock?.(); endEdit(false); clearStructs();
 };
 $("toMenu").addEventListener("click", toMenu);
 $("endMenu").addEventListener("click", toMenu);
@@ -1262,7 +1444,7 @@ for (const sp of [
   { type: "wall", axis: "z", i: 8, k: 8, L: 1 }, { type: "wall", axis: "x", i: 10, k: 10, L: 0 }, { type: "wall", axis: "z", i: 9, k: 11, L: 0 }, { type: "floor", i: 9, k: 10, L: 1 },
 ]) { const s = addStruct(sp); if (s) { s.hp = s.maxHp; tintStruct(s); } }
 
-window.__bf = { player, bot, structs, tryBuild, buildSpec, canPlace, settings, begin, get state() { return state; }, setLocked(v) { locked = v; }, setMouse(v) { mouseDown = v; }, keys, startRound, update };
+window.__bf = { player, bot, structs, tryBuild, buildSpec, canPlace, settings, begin, get state() { return state; }, setLocked(v) { locked = v; }, setMouse(v) { mouseDown = v; }, startEdit, endEdit, editPointer, get editing() { return editing; }, keys, startRound, update };
 requestAnimationFrame(frame);
 </script>
 </body>
