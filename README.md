@@ -47,3 +47,15 @@ Per far scattare lo screenshot direttamente allo script, dai giochi che hanno gi
 ```
 node tools/genera-copertine.js --cattura
 ```
+
+## Build Fight 1v1
+
+In `buildfight/index.html` c'è un gioco 3D in stile Fortnite: una mappa da build fight 1v1 in cui sfidi un bot (Facile, Normale o Difficile) oppure ti alleni da solo contro un manichino.
+
+- griglia di costruzione come in Fortnite: **Q** muro, **E** rampa, **C** pavimento, clic sinistro per piazzare (tieni premuto per costruire veloce)
+- **1** piccone, **2** pompa, **3** fucile d'assalto, **R** ricarica, clic destro per mirare
+- scudo e vita, colpi alla testa, danno da caduta, costruzioni che si rinforzano dopo essere piazzate e crollano se perdono la base
+- il bot spara, si copre con muri e rampe e fa ramp rush per prenderti l'altezza
+- round al meglio di 3, 5 o 7
+
+Si gioca con tastiera e mouse: apri il file nel browser (serve la connessione per caricare three.js dal CDN).
