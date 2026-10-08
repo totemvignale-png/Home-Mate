@@ -145,7 +145,7 @@ kbd { font: 700 12px var(--body); color: var(--chalk); background: rgba(255,255,
     <b>1</b> piccone · <b>2</b> pompa · <b>3</b> fucile · <b>R</b> ricarica<br>
     <b>Q</b> muro · <b>E</b> rampa · <b>C</b> pavimento<br>
     <b>Clic</b> spara / costruisci (tieni premuto) · <b>Dx</b> mira<br>
-    <b>H</b> nascondi aiuto · <b>Esc</b> pausa
+    <b>H</b> nascondi aiuto · <b>Esc</b> o <b>P</b> pausa
   </div>
   <div id="vitals">
     <div class="vrow s"><span id="vSh">100</span><div class="bar sh"><i id="bSh"></i></div></div>
@@ -191,7 +191,7 @@ kbd { font: 700 12px var(--body); color: var(--chalk); background: rgba(255,255,
       <div><kbd>C</kbd> pavimento</div>
       <div>clic sinistro: spara / piazza (tieni premuto per costruire veloce)</div>
       <div>clic destro: mira col fucile</div>
-      <div><kbd>Esc</kbd> pausa</div>
+      <div><kbd>Esc</kbd> o <kbd>P</kbd> pausa</div>
     </div>
     <p class="note">Trucco: per salire veloce fai <b>rampa + muro</b> mentre corri in avanti (prima la rampa, poi il muro davanti). I pezzi devono toccare il terreno o un'altra costruzione: se togli la base, crolla tutto quello che c'è sopra.</p>
     <p class="note" id="mobileNote" hidden>Questo gioco richiede un computer con tastiera e mouse.</p>
@@ -967,7 +967,7 @@ function endMatch() {
    ========================================================= */
 const keys = {};
 let mouseDown = false, aiming = false, buildPiece = null, buildCd = 0, recoil = 0, vmKick = 0, bob = 0;
-let locked = false;
+let locked = false, freeLook = false;
 const BUILD_KEYS = { KeyQ: "wall", KeyE: "ramp", KeyC: "floor" };
 const WEAPON_KEYS = { Digit1: "pickaxe", Digit2: "shotgun", Digit3: "ar" };
 const ORDER = ["pickaxe", "shotgun", "ar"];
@@ -980,19 +980,20 @@ addEventListener("keydown", e => {
   if (WEAPON_KEYS[e.code]) { buildPiece = null; equip(player, WEAPON_KEYS[e.code]); }
   if (e.code === "KeyR" && !buildPiece) startReload(player);
   if (e.code === "KeyH") helpEl.hidden = !helpEl.hidden;
+  if (e.code === "KeyP" && !paused) { document.exitPointerLock?.(); setPaused(true); }
 });
 addEventListener("keyup", e => { keys[e.code] = false; });
 addEventListener("blur", () => { for (const k in keys) keys[k] = false; mouseDown = aiming = false; });
 canvas.addEventListener("mousedown", e => {
   if (!inGame || paused) return;
-  if (!locked) { lockPointer(); return; }
+  if (!locked && !freeLook) { lockPointer(); return; }
   if (e.button === 0) { mouseDown = true; buildCd = 0; }
   if (e.button === 2) aiming = true;
 });
 addEventListener("mouseup", e => { if (e.button === 0) mouseDown = false; if (e.button === 2) aiming = false; });
 addEventListener("contextmenu", e => { if (inGame) e.preventDefault(); });
 addEventListener("mousemove", e => {
-  if (!locked || paused) return;
+  if ((!locked && !freeLook) || paused) return;
   const s = 0.0022 * settings.sens * (aiming && player.weapon === "ar" && !buildPiece ? 0.6 : 1);
   player.yaw -= e.movementX * s;
   player.pitch = clamp(player.pitch - e.movementY * s, -1.5, 1.5);
@@ -1004,14 +1005,19 @@ addEventListener("wheel", e => {
   equip(player, ORDER[(i + (e.deltaY > 0 ? 1 : 2)) % 3]);
 }, { passive: true });
 
+// se il browser non concede la cattura del mouse, si guarda intorno muovendo il mouse sul gioco
 function lockPointer() {
   try { const p = canvas.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch {}
+  setTimeout(() => {
+    if (!locked && inGame && !paused) { freeLook = true; lockHint.textContent = "Mouse non catturato: muovi il mouse sul gioco per guardarti intorno · P per la pausa"; lockHint.hidden = false; }
+  }, 700);
 }
 document.addEventListener("pointerlockchange", () => {
   locked = document.pointerLockElement === canvas;
   lockHint.hidden = locked || !inGame;
   if (locked && paused) setPaused(false);
-  if (!locked && inGame && !paused && state !== "menu") setPaused(true);
+  if (!locked && inGame && !paused && state !== "menu" && !freeLook) setPaused(true);
+  if (locked) freeLook = false;
 });
 
 function setPaused(p) {
